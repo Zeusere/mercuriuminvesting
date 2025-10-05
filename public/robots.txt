@@ -1,0 +1,11 @@
+# robots.txt
+User-agent: *
+Allow: /
+
+# Disallow admin pages (add when you have them)
+# Disallow: /admin
+# Disallow: /dashboard
+
+# Sitemap location
+Sitemap: https://yourdomain.com/sitemap.xml
+
