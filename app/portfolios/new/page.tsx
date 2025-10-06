@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import NewPortfolioContent from '@/components/NewPortfolioContent'
 
 export default async function NewPortfolioPage() {
   const supabase = createServerSupabaseClient()
@@ -10,5 +9,6 @@ export default async function NewPortfolioPage() {
     redirect('/login')
   }
 
-  return <NewPortfolioContent user={session.user} />
+  // Redirect to AI Investor Create Strategy
+  redirect('/ai-investor/create-strategy')
 }

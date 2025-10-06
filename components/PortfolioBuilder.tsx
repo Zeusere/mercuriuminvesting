@@ -17,9 +17,10 @@ interface SavedPortfolio {
 
 interface PortfolioBuilderProps {
   onSave?: (portfolio: { name: string; stocks: PortfolioStock[]; totalAmount: number }) => void
+  showSavedPortfolios?: boolean
 }
 
-export default function PortfolioBuilder({ onSave }: PortfolioBuilderProps) {
+export default function PortfolioBuilder({ onSave, showSavedPortfolios = true }: PortfolioBuilderProps) {
   const [portfolioName, setPortfolioName] = useState('')
   const [stocks, setStocks] = useState<PortfolioStock[]>([])
   const [totalAmount, setTotalAmount] = useState(10000)
@@ -35,6 +36,31 @@ export default function PortfolioBuilder({ onSave }: PortfolioBuilderProps) {
   // Cargar carteras guardadas al montar
   useEffect(() => {
     fetchSavedPortfolios()
+  }, [])
+
+  // Escuchar eventos de la AI para añadir stocks
+  useEffect(() => {
+    const handleAIAddStocks = (event: any) => {
+      const { stocks: aiStocks } = event.detail
+      if (aiStocks && aiStocks.length > 0) {
+        // Añadir los stocks de la AI al builder
+        setStocks(aiStocks)
+        setShowNewPortfolioForm(true)
+        setAllBacktests(null)
+        setHasCalculated(false)
+        
+        // Scroll hacia el formulario
+        setTimeout(() => {
+          const formElement = document.getElementById('portfolio-form')
+          if (formElement) {
+            formElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        }, 100)
+      }
+    }
+
+    window.addEventListener('ai-add-stocks', handleAIAddStocks)
+    return () => window.removeEventListener('ai-add-stocks', handleAIAddStocks)
   }, [])
 
   const fetchSavedPortfolios = async () => {
@@ -236,20 +262,21 @@ export default function PortfolioBuilder({ onSave }: PortfolioBuilderProps) {
   return (
     <div className="space-y-6">
       {/* Carteras Guardadas */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <FolderOpen size={24} className="text-primary-600" />
-            <h2 className="text-2xl font-bold">Mis Carteras</h2>
+      {showSavedPortfolios && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <FolderOpen size={24} className="text-primary-600" />
+              <h2 className="text-2xl font-bold">Mis Carteras</h2>
+            </div>
+            <button
+              onClick={createNewPortfolio}
+              className="btn-primary px-4 py-2 flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Nueva Cartera
+            </button>
           </div>
-          <button
-            onClick={createNewPortfolio}
-            className="btn-primary px-4 py-2 flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Nueva Cartera
-          </button>
-        </div>
           
         {isLoadingPortfolios ? (
           <div className="text-center py-8">
@@ -311,10 +338,11 @@ export default function PortfolioBuilder({ onSave }: PortfolioBuilderProps) {
               ))}
           </div>
         )}
-      </div>
+        </div>
+      )}
 
-      {/* Configuración de cartera - Solo visible cuando se activa */}
-      {showNewPortfolioForm && (
+      {/* Configuración de cartera - Solo visible cuando se activa o cuando no se muestran portfolios guardados */}
+      {(showNewPortfolioForm || !showSavedPortfolios) && (
         <div id="portfolio-form" className="card">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">

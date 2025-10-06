@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import StockSearch from './StockSearch'
 import StockDetail from './StockDetail'
@@ -9,13 +9,19 @@ import Navigation from './Navigation'
 
 interface StocksPageContentProps {
   user: User
+  initialSymbol?: string
 }
 
-export default function StocksPageContent({ user }: StocksPageContentProps) {
-  const [selectedStock, setSelectedStock] = useState<string | null>(null)
+export default function StocksPageContent({ user, initialSymbol }: StocksPageContentProps) {
+  const router = useRouter()
+  const selectedStock = initialSymbol || null
 
   const handleSelectStock = (stock: SearchResult) => {
-    setSelectedStock(stock.symbol)
+    router.push(`/stocks?symbol=${stock.symbol}`)
+  }
+
+  const handleBackToSearch = () => {
+    router.push('/stocks')
   }
 
   return (
@@ -48,7 +54,7 @@ export default function StocksPageContent({ user }: StocksPageContentProps) {
               {['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX'].map(symbol => (
                 <button
                   key={symbol}
-                  onClick={() => setSelectedStock(symbol)}
+                  onClick={() => router.push(`/stocks?symbol=${symbol}`)}
                   className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
                 >
                   <p className="font-bold text-lg">{symbol}</p>
@@ -62,7 +68,7 @@ export default function StocksPageContent({ user }: StocksPageContentProps) {
         {selectedStock && (
           <div>
             <button
-              onClick={() => setSelectedStock(null)}
+              onClick={handleBackToSearch}
               className="mb-4 text-primary-600 hover:text-primary-700 font-medium"
             >
               ← Back to search

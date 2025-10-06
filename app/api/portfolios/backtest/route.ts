@@ -48,12 +48,13 @@ function calculatePortfolioBacktest(
   totalAmount: number,
   periodLabel: string
 ): BacktestResult {
-  // Obtener todas las fechas comunes
+  // Obtener todas las fechas comunes a todas las acciones
   const allDates = Array.from(historicalData.values())
     .map(data => data.dates)
     .reduce((acc, dates) => {
+      if (acc.length === 0) return dates
       return acc.filter(date => dates.includes(date))
-    })
+    }, [] as number[])
     .sort()
 
   if (allDates.length === 0) {
@@ -187,7 +188,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { stocks, totalAmount } = await request.json()
+    const body = await request.json()
+    const { stocks, totalAmount, total_amount } = body
+    const amount = totalAmount || total_amount || 10000
 
     if (!stocks || stocks.length === 0) {
       return NextResponse.json(
@@ -272,7 +275,7 @@ export async function POST(request: NextRequest) {
           results[period.key] = calculatePortfolioBacktest(
             stocks,
             periodData,
-            totalAmount,
+            amount,
             period.label
           )
         } catch (error) {

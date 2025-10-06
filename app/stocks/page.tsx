@@ -2,7 +2,11 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import StocksPageContent from '../../components/StocksPageContent'
 
-export default async function StocksPage() {
+interface StocksPageProps {
+  searchParams: { symbol?: string }
+}
+
+export default async function StocksPage({ searchParams }: StocksPageProps) {
   const supabase = createServerSupabaseClient()
 
   const {
@@ -13,5 +17,5 @@ export default async function StocksPage() {
     redirect('/login')
   }
 
-  return <StocksPageContent user={session.user} />
+  return <StocksPageContent user={session.user} initialSymbol={searchParams.symbol} />
 }

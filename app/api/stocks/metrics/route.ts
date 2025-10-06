@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFinnhubClient, hasFinnhubKey } from '@/lib/finnhub/client'
 
 export async function GET(request: NextRequest) {
   try {
-    if (!hasFinnhubKey()) {
-      return NextResponse.json(
-        { error: 'Finnhub API key not configured' },
-        { status: 500 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const symbol = searchParams.get('symbol')
 
@@ -20,31 +12,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const client = getFinnhubClient()
-    
-    try {
-      const response = await client.companyBasicFinancials(symbol, 'all')
-      return NextResponse.json(response.data)
-    } catch (apiError: any) {
-      // Si el endpoint no está disponible en el plan gratuito, devolver datos vacíos
-      if (apiError?.response?.data?.error?.includes("don't have access")) {
-        return NextResponse.json({
-          metric: {},
-          series: {},
-          message: 'Métricas financieras no disponibles en el plan gratuito de Finnhub'
-        })
-      }
-      throw apiError
-    }
-  } catch (error) {
+    // Alpaca no proporciona métricas financieras detalladas
+    // Devolver estructura vacía compatible con el frontend
+    return NextResponse.json({
+      metric: {
+        // Métricas básicas vacías
+      },
+      series: {},
+      message: 'Detailed financial metrics not available through Alpaca API. Price data is available in the chart.'
+    })
+  } catch (error: any) {
     console.error('Error fetching metrics:', error)
     return NextResponse.json(
       { 
         metric: {},
         series: {},
-        error: 'Error fetching metrics' 
+        error: 'Error fetching metrics',
+        details: error?.message
       },
-      { status: 500 }
+      { status: 200 } // Devolver 200 con datos vacíos
     )
   }
 }

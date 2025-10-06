@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Loader2, Building2, Globe, DollarSign, BarChart3 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Loader2, Building2, Globe, DollarSign, BarChart3, Star } from 'lucide-react'
 import { StockQuote, StockProfile, StockMetrics } from '@/types/stocks'
 import StockChart from './StockChart'
 
@@ -14,10 +14,13 @@ export default function StockDetail({ symbol }: StockDetailProps) {
   const [profile, setProfile] = useState<StockProfile | null>(null)
   const [metrics, setMetrics] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false)
   const [period, setPeriod] = useState<'1M' | '3M' | '6M' | '1Y' | '5Y'>('1Y')
 
   useEffect(() => {
     fetchStockData()
+    checkIfFavorite()
   }, [symbol])
 
   const fetchStockData = async () => {
@@ -40,6 +43,53 @@ export default function StockDetail({ symbol }: StockDetailProps) {
       console.error('Error fetching stock data:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const checkIfFavorite = async () => {
+    try {
+      const response = await fetch('/api/favorites')
+      if (response.ok) {
+        const data = await response.json()
+        const favorites = data.favorites || []
+        setIsFavorite(favorites.some((f: any) => f.symbol === symbol))
+      }
+    } catch (error) {
+      console.error('Error checking favorite status:', error)
+    }
+  }
+
+  const toggleFavorite = async () => {
+    if (isTogglingFavorite) return
+    
+    setIsTogglingFavorite(true)
+    try {
+      if (isFavorite) {
+        // Eliminar de favoritos
+        const response = await fetch(`/api/favorites?symbol=${symbol}`, {
+          method: 'DELETE',
+        })
+        if (response.ok) {
+          setIsFavorite(false)
+        }
+      } else {
+        // Añadir a favoritos
+        const response = await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            symbol: symbol,
+            name: profile?.name || symbol,
+          }),
+        })
+        if (response.ok) {
+          setIsFavorite(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+    } finally {
+      setIsTogglingFavorite(false)
     }
   }
 
@@ -76,6 +126,21 @@ export default function StockDetail({ symbol }: StockDetailProps) {
               {profile.logo && (
                 <img src={profile.logo} alt={profile.name} className="w-10 h-10 rounded" />
               )}
+              <button
+                onClick={toggleFavorite}
+                disabled={isTogglingFavorite}
+                className={`p-2 rounded-lg transition-all ${
+                  isFavorite
+                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                } ${isTogglingFavorite ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+                title={isFavorite ? 'Eliminar de favoritos' : 'Añadir a favoritos'}
+              >
+                <Star
+                  size={20}
+                  className={isFavorite ? 'fill-current' : ''}
+                />
+              </button>
             </div>
             <p className="text-gray-600 dark:text-gray-400">{profile.name}</p>
             <p className="text-sm text-gray-500 dark:text-gray-500">
