@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import Navigation from './Navigation'
-import { Loader2, ArrowLeft, AlertCircle } from 'lucide-react'
+import { Loader2, ArrowLeft, AlertCircle, TrendingUp } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import RunStrategyModal from './RunStrategyModal'
 
 interface Stock {
   symbol: string
@@ -67,6 +68,7 @@ export default function PortfolioViewer({ user, portfolioId }: PortfolioViewerPr
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1M' | '3M' | 'YTD' | '1Y' | '3Y' | '5Y'>('1Y')
+  const [isRunStrategyModalOpen, setIsRunStrategyModalOpen] = useState(false)
 
   const isOwner = portfolio?.user_id === user.id
 
@@ -179,12 +181,21 @@ export default function PortfolioViewer({ user, portfolioId }: PortfolioViewerPr
               </p>
             </div>
             {isOwner && (
-              <Link
-                href={`/portfolios/${portfolioId}/edit`}
-                className="btn-primary"
-              >
-                Edit Portfolio
-              </Link>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsRunStrategyModalOpen(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <TrendingUp className="w-5 h-5" />
+                  Run Strategy
+                </button>
+                <Link
+                  href={`/portfolios/${portfolioId}/edit`}
+                  className="btn-primary"
+                >
+                  Edit Portfolio
+                </Link>
+              </div>
             )}
           </div>
 
@@ -368,6 +379,15 @@ export default function PortfolioViewer({ user, portfolioId }: PortfolioViewerPr
           )}
         </div>
       </main>
+
+      {/* Run Strategy Modal */}
+      {portfolio && (
+        <RunStrategyModal
+          isOpen={isRunStrategyModalOpen}
+          onClose={() => setIsRunStrategyModalOpen(false)}
+          portfolio={portfolio}
+        />
+      )}
     </div>
   )
 }

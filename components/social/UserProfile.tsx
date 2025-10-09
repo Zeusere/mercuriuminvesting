@@ -29,8 +29,11 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
   const [profile, setProfile] = useState<UserProfileType | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [portfolios, setPortfolios] = useState<Portfolio[]>([])
+  const [mainStrategy, setMainStrategy] = useState<any>(null)
+  const [mainStrategyPositions, setMainStrategyPositions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingPerformance, setIsLoadingPerformance] = useState(false)
+  const [isLoadingMainStrategy, setIsLoadingMainStrategy] = useState(false)
   const [activeTab, setActiveTab] = useState<'posts' | 'portfolios'>('posts')
   const [performanceLoaded, setPerformanceLoaded] = useState(false)
 
@@ -38,6 +41,9 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
 
   useEffect(() => {
     fetchProfileData()
+    if (isOwnProfile) {
+      fetchMainStrategy()
+    }
   }, [profileId])
 
   const fetchProfileData = async () => {
@@ -55,6 +61,22 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
       console.error('Error fetching profile:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchMainStrategy = async () => {
+    setIsLoadingMainStrategy(true)
+    try {
+      const response = await fetch('/api/strategies/main')
+      if (response.ok) {
+        const data = await response.json()
+        setMainStrategy(data.mainStrategy)
+        setMainStrategyPositions(data.positions || [])
+      }
+    } catch (error) {
+      console.error('Error fetching main strategy:', error)
+    } finally {
+      setIsLoadingMainStrategy(false)
     }
   }
 
@@ -239,6 +261,75 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
               </div>
             </div>
           </div>
+
+          {/* Main Strategy (only for own profile) */}
+          {isOwnProfile && (
+            <div className="mb-6">
+              {isLoadingMainStrategy ? (
+                <div className="card animate-pulse">
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                </div>
+              ) : mainStrategy ? (
+                <div className="card bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-green-200 dark:border-green-800">
+                  {/* Strategy Header */}
+                  <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <Link 
+                        href={`/strategies/${mainStrategy.id}`}
+                        className="text-xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      >
+                        {mainStrategy.name}
+                      </Link>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Active Strategy
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                        ${(mainStrategy.current_capital || mainStrategy.initial_capital).toLocaleString()}
+                      </div>
+                      <div className={`text-base font-semibold ${
+                        (mainStrategy.total_return_pct || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {(mainStrategy.total_return_pct || 0) >= 0 ? '+' : ''}{(mainStrategy.total_return_pct || 0).toFixed(2)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Positions Summary */}
+                  {mainStrategyPositions.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {mainStrategyPositions.slice(0, 8).map((position: any) => {
+                        const isProfitable = (position.unrealized_pnl_pct || 0) >= 0;
+                        return (
+                          <div key={position.id} className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                            <div className="font-bold text-gray-900 dark:text-white mb-1">{position.symbol}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {position.weight_pct?.toFixed(1) || '0.0'}%
+                            </div>
+                            <div className={`text-sm font-semibold ${isProfitable ? 'text-green-600' : 'text-red-600'}`}>
+                              {isProfitable ? '+' : ''}{position.unrealized_pnl_pct?.toFixed(2) || '0.00'}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* View Full Strategy Button */}
+                  <Link
+                    href={`/strategies/${mainStrategy.id}`}
+                    className="mt-4 w-full btn-primary flex items-center justify-center gap-2"
+                  >
+                    <TrendingUp size={18} />
+                    View Full Strategy
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="card mb-6 p-0">

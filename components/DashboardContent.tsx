@@ -5,18 +5,9 @@ import { User } from '@supabase/supabase-js'
 import { TrendingUp, Plus, Briefcase, Newspaper, Users, Trophy, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import Navigation from './Navigation'
 import Link from 'next/link'
-import { PortfolioStock } from '@/types/stocks'
 
 interface DashboardContentProps {
   user: User
-}
-
-interface SavedPortfolio {
-  id: string
-  name: string
-  stocks: PortfolioStock[]
-  total_amount: number
-  created_at: string
 }
 
 interface Gainer {
@@ -50,32 +41,32 @@ interface NewsArticle {
 }
 
 export default function DashboardContent({ user }: DashboardContentProps) {
-  const [portfolios, setPortfolios] = useState<SavedPortfolio[]>([])
+  const [activeStrategies, setActiveStrategies] = useState<any[]>([])
   const [gainers, setGainers] = useState<Gainer[]>([])
   const [losers, setLosers] = useState<Loser[]>([])
   const [news, setNews] = useState<NewsArticle[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingStrategies, setIsLoadingStrategies] = useState(true)
   const [isLoadingGainers, setIsLoadingGainers] = useState(true)
   const [isLoadingNews, setIsLoadingNews] = useState(true)
   const [marketOpen, setMarketOpen] = useState(false)
 
   useEffect(() => {
-    fetchPortfolios()
+    fetchActiveStrategies()
     fetchGainers()
     fetchNews()
   }, [])
 
-  const fetchPortfolios = async () => {
+  const fetchActiveStrategies = async () => {
     try {
-      const response = await fetch('/api/portfolios')
+      const response = await fetch('/api/strategies?status=active')
       if (response.ok) {
         const data = await response.json()
-        setPortfolios(data.portfolios || [])
+        setActiveStrategies(data.strategies || [])
       }
     } catch (error) {
-      console.error('Error fetching portfolios:', error)
+      console.error('Error fetching active strategies:', error)
     } finally {
-      setIsLoading(false)
+      setIsLoadingStrategies(false)
     }
   }
 
@@ -146,79 +137,78 @@ export default function DashboardContent({ user }: DashboardContentProps) {
           <p className="text-gray-600 dark:text-gray-400">Here&apos;s what&apos;s happening with your investments today</p>
         </div>
 
-        {/* My Portfolios Section */}
+        {/* Removed My Main Strategy section per request */}
+
+        {/* Active Strategies Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Briefcase className="text-primary-600" size={24} />
-              <h2 className="text-2xl font-bold">My Portfolios</h2>
+              <TrendingUp className="text-green-600" size={24} />
+              <h2 className="text-2xl font-bold">Active Strategies</h2>
             </div>
-            <Link href="/ai-investor/create-strategy" className="btn-primary px-4 py-2 flex items-center gap-2">
-              <Plus size={20} />
-              New Portfolio
-            </Link>
           </div>
 
-          {isLoading ? (
+          {isLoadingStrategies ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
+              {[1, 2].map((i) => (
                 <div key={i} className="card animate-pulse">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
                   <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                 </div>
               ))}
             </div>
-          ) : portfolios.length === 0 ? (
-            <div className="card text-center py-12">
-              <Briefcase size={48} className="mx-auto mb-3 opacity-50 text-gray-400" />
-              <p className="text-lg mb-2 font-semibold">No portfolios yet</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Create your first portfolio to start tracking your investments
+          ) : activeStrategies.length === 0 ? (
+            <div className="card text-center py-8">
+              <TrendingUp size={48} className="mx-auto mb-3 opacity-50 text-gray-400" />
+              <p className="text-lg mb-2 font-semibold">No active strategies</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Run a strategy from one of your portfolios to start tracking live performance
               </p>
-              <Link href="/ai-investor/create-strategy" className="btn-primary inline-flex items-center gap-2">
-                <Plus size={20} />
-                Create Portfolio
-              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {portfolios.map((portfolio) => (
-                <Link
-                  key={portfolio.id}
-                  href={`/portfolios/edit/${portfolio.id}`}
-                  className="card hover:scale-105 transition-transform cursor-pointer bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 border-2 border-transparent hover:border-primary-500"
-                >
-                  <h3 className="font-bold text-lg mb-2">{portfolio.name}</h3>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <p>{portfolio.stocks.length} stocks</p>
-                    <p className="font-semibold text-lg">${portfolio.total_amount.toLocaleString()}</p>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {portfolio.stocks.slice(0, 4).map((stock) => (
-                      <span
-                        key={stock.symbol}
-                        className="px-2 py-1 bg-white dark:bg-gray-800 rounded text-xs font-medium"
-                      >
-                        {stock.symbol}
+              {activeStrategies.map((strategy) => {
+                const totalReturn = strategy.total_return_pct || 0;
+                const isPositive = totalReturn >= 0;
+                return (
+                  <Link
+                    key={strategy.id}
+                    href={`/strategies/${strategy.id}`}
+                    className="card hover:scale-105 transition-transform cursor-pointer bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-transparent hover:border-green-500"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-bold text-lg">{strategy.name}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        strategy.status === 'active' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+                      }`}>
+                        {strategy.status}
                       </span>
-                    ))}
-                    {portfolio.stocks.length > 4 && (
-                      <span className="px-2 py-1 bg-white dark:bg-gray-800 rounded text-xs font-medium">
-                        +{portfolio.stocks.length - 4}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                      <p>Initial: ${strategy.initial_capital.toLocaleString()}</p>
+                      <p>Current: ${(strategy.current_capital || strategy.initial_capital).toLocaleString()}</p>
+                      <div className={`font-bold text-lg flex items-center gap-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                        {isPositive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                        {isPositive ? '+' : ''}{totalReturn.toFixed(2)}%
+                      </div>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                      Started {new Date(strategy.start_date).toLocaleDateString()}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
-        </div>
+            </div>
 
         {/* News & Gainers Section */}
         <div className="mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Market News - Twitter Style Feed */}
-              <div>
+            <div>
               <div className="flex items-center gap-2 mb-4">
                 <Newspaper className="text-primary-600" size={24} />
                 <h2 className="text-2xl font-bold">Market News</h2>
@@ -278,9 +268,9 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                   <div className="card bg-blue-50 dark:bg-blue-900/20 text-center py-4">
                     <p className="text-xs text-gray-600 dark:text-gray-400">
                       Showing news for your favorite stocks and portfolio holdings
-                </p>
-              </div>
-                </div>
+              </p>
+            </div>
+          </div>
               ) : (
                 <div className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 text-center py-12">
                   <Newspaper size={48} className="mx-auto mb-3 opacity-50 text-gray-400" />
@@ -316,10 +306,10 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                     {marketOpen ? '● Market Open' : '● Market Closed'}
                   </span>
                 )}
-            </div>
+        </div>
 
               {isLoadingGainers ? (
-                <div className="card">
+          <div className="card">
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <div key={i} className="animate-pulse flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
@@ -331,9 +321,9 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                       </div>
                     ))}
                   </div>
-                </div>
+          </div>
               ) : gainers.length > 0 ? (
-                <div className="card">
+          <div className="card">
                   <div className="space-y-2">
                     {gainers.map((stock, index) => (
                       <Link
@@ -369,7 +359,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                       {marketOpen ? 'Live data from Alpaca Markets' : 'Data from last trading session'}
                     </p>
                   </div>
-                </div>
+          </div>
               ) : (
                 <div className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 text-center py-12">
                   <TrendingUp size={48} className="mx-auto mb-3 opacity-50 text-gray-400" />
@@ -385,7 +375,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                   >
                     Refresh Data
               </button>
-            </div>
+          </div>
               )}
 
               {/* The Losers */}
@@ -405,14 +395,14 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                           <div className="flex-1">
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-2"></div>
                             <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
-                          </div>
+                </div>
                           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              </div>
+            ))}
+          </div>
+        </div>
                 ) : losers.length > 0 ? (
-                  <div className="card">
+        <div className="card">
                     <div className="space-y-2">
                       {losers.map((stock, index) => (
                         <Link
@@ -463,7 +453,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                       className="btn-outline px-4 py-2 text-sm"
                     >
                       Refresh Data
-                    </button>
+            </button>
           </div>
                 )}
           </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Loader2, FolderOpen, Trash2, Briefcase, Globe, Lock } from 'lucide-react'
+import { Plus, Loader2, FolderOpen, Trash2, Briefcase, Globe, Lock, TrendingUp, Star } from 'lucide-react'
 import { PortfolioStock } from '@/types/stocks'
 
 interface SavedPortfolio {
@@ -15,13 +15,27 @@ interface SavedPortfolio {
   is_public: boolean
 }
 
+interface ActiveStrategyListItem {
+  id: string
+  name: string
+  start_date: string
+  initial_capital: number
+  current_capital: number | null
+  total_return_pct: number | null
+  status: 'active' | 'paused' | 'closed'
+  is_main?: boolean
+}
+
 export default function PortfolioList() {
   const router = useRouter()
   const [savedPortfolios, setSavedPortfolios] = useState<SavedPortfolio[]>([])
   const [isLoadingPortfolios, setIsLoadingPortfolios] = useState(true)
+  const [strategies, setStrategies] = useState<ActiveStrategyListItem[]>([])
+  const [isLoadingStrategies, setIsLoadingStrategies] = useState(true)
 
   useEffect(() => {
     fetchSavedPortfolios()
+    fetchStrategies()
   }, [])
 
   const fetchSavedPortfolios = async () => {
@@ -37,6 +51,40 @@ export default function PortfolioList() {
       console.error('Error fetching portfolios:', error)
     } finally {
       setIsLoadingPortfolios(false)
+    }
+  }
+
+  const fetchStrategies = async () => {
+    setIsLoadingStrategies(true)
+    try {
+      const res = await fetch('/api/strategies?status=active')
+      if (res.ok) {
+        const data = await res.json()
+        setStrategies(data.strategies || [])
+      }
+    } catch (e) {
+      console.error('Error fetching strategies:', e)
+    } finally {
+      setIsLoadingStrategies(false)
+    }
+  }
+
+  const setMainStrategy = async (strategyId: string) => {
+    try {
+      const res = await fetch('/api/strategies/main', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ strategy_id: strategyId })
+      })
+      if (res.ok) {
+        // Update local list
+        setStrategies(prev => prev.map(s => ({ ...s, is_main: s.id === strategyId })))
+      } else {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Failed to set main strategy')
+      }
+    } catch (e) {
+      console.error('Error setting main strategy:', e)
     }
   }
 
@@ -217,6 +265,64 @@ export default function PortfolioList() {
           ))}
         </div>
       )}
+
+      {/* Strategies Section */}
+      <div className="pt-2">
+        <div className="flex items-center justify-between mt-6 mb-3">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="text-primary-600" size={20} />
+            <h2 className="text-xl font-bold">My Strategies</h2>
+          </div>
+        </div>
+
+        {isLoadingStrategies ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="card animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        ) : strategies.length === 0 ? (
+          <div className="card text-center py-8">
+            <TrendingUp size={36} className="mx-auto mb-2 opacity-50 text-gray-400" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">No active strategies yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {strategies.map((s) => {
+              const ret = s.total_return_pct || 0
+              const isPos = ret >= 0
+              return (
+                <div key={s.id} className="card bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-transparent hover:border-green-500 transition-colors relative">
+                  {/* Main toggle */}
+                  <button
+                    onClick={() => setMainStrategy(s.id)}
+                    title={s.is_main ? 'Main strategy' : 'Set as main'}
+                    className={`absolute top-3 right-3 p-2 rounded-lg transition-colors ${s.is_main ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                  >
+                    <Star size={16} className={s.is_main ? 'fill-current' : ''} />
+                  </button>
+
+                  <Link href={`/strategies/${s.id}`} className="block">
+                    <h3 className="font-bold text-lg mb-1 pr-10">{s.name}</h3>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                      <p>Initial: ${s.initial_capital.toLocaleString()}</p>
+                      <p>Current: ${(s.current_capital || s.initial_capital).toLocaleString()}</p>
+                      <div className={`font-bold ${isPos ? 'text-green-600' : 'text-red-600'}`}>{isPos ? '+' : ''}{ret.toFixed(2)}%</div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Started {new Date(s.start_date).toLocaleDateString()}
+                    </div>
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
