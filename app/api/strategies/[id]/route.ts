@@ -198,3 +198,53 @@ export async function PATCH(
   }
 }
 
+// DELETE /api/strategies/[id] - Delete strategy
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const strategyId = params.id;
+
+    // Verify ownership before deleting
+    const { data: strategy, error: strategyError } = await supabase
+      .from('active_strategies')
+      .select('id, user_id')
+      .eq('id', strategyId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (strategyError || !strategy) {
+      return NextResponse.json({ error: 'Strategy not found' }, { status: 404 });
+    }
+
+    // Delete strategy (cascade will delete positions, transactions, and rebalances)
+    const { error: deleteError } = await supabase
+      .from('active_strategies')
+      .delete()
+      .eq('id', strategyId)
+      .eq('user_id', user.id);
+
+    if (deleteError) {
+      console.error('Error deleting strategy:', deleteError);
+      return NextResponse.json({ error: 'Failed to delete strategy' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Strategy deleted successfully' });
+
+  } catch (error) {
+    console.error('Error in DELETE /api/strategies/[id]:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+

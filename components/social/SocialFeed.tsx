@@ -76,15 +76,7 @@ export default function SocialFeed({ user }: SocialFeedProps) {
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <Users size={32} className="text-primary-600" />
-              Social Feed
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Share your portfolio insights and connect with other investors
-            </p>
-          </div>
+          
 
           {/* Post Composer */}
           <PostComposer onPostCreated={fetchPosts} />

@@ -4,11 +4,11 @@ import BlogContent from '@/components/BlogContent'
 
 export default async function BlogPage() {
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (authError || !user) {
     redirect('/login')
   }
 
-  return <BlogContent user={session.user} />
+  return <BlogContent user={user} />
 }

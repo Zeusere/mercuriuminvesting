@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Heart, MessageCircle, Share2, TrendingUp } from 'lucide-react'
 import { Post } from '@/types/social'
+import Avatar from '../Avatar'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -24,32 +25,17 @@ export default function PostCard({ post, onLikeToggle }: PostCardProps) {
     }
   }
 
-  const getInitials = (name: string | null) => {
-    if (!name) return '?'
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
 
   return (
     <div className="card hover:shadow-md transition-shadow">
       <div className="flex gap-3">
         {/* Avatar */}
         <Link href={`/profile/${post.user_profile?.user_id || post.user_id}`}>
-          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-105 transition-transform">
-            {post.user_profile?.avatar_url ? (
-              <img
-                src={post.user_profile.avatar_url}
-                alt={post.user_profile.display_name || ''}
-                className="w-full h-full rounded-full object-cover"
-              />
-            ) : (
-              <span>{getInitials(post.user_profile?.display_name || null)}</span>
-            )}
-          </div>
+          <Avatar
+            src={post.user_profile?.avatar_url}
+            alt={post.user_profile?.display_name || 'User'}
+            size="md"
+          />
         </Link>
 
         {/* Content */}

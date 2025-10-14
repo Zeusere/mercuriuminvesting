@@ -6,13 +6,14 @@ export default async function DashboardPage() {
   const supabase = createServerSupabaseClient()
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+    error: authError
+  } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (authError || !user) {
     redirect('/login')
   }
 
-  return <DashboardContent user={session.user} />
+  return <DashboardContent user={user} />
 }
 

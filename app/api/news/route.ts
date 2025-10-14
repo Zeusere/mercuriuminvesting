@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -24,13 +24,13 @@ export async function GET(request: NextRequest) {
     const { data: favorites } = await supabase
       .from('favorite_stocks')
       .select('symbol')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
 
     // Obtener portfolios del usuario y extraer símbolos únicos
     const { data: portfolios } = await supabase
       .from('portfolios')
       .select('stocks')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
 
     // Combinar símbolos de favoritos y portfolios
     const favoriteSymbols = favorites?.map(f => f.symbol) || []

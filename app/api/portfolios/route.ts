@@ -6,16 +6,16 @@ import { Portfolio } from '@/types/stocks'
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data, error } = await supabase
       .from('portfolios')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -36,16 +36,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const portfolioData = await request.json()
 
     const newPortfolio: Partial<Portfolio> = {
-      user_id: session.user.id,
+      user_id: user.id,
       name: portfolioData.name,
       description: portfolioData.description,
       stocks: portfolioData.stocks || [],
@@ -78,9 +78,9 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -93,7 +93,7 @@ export async function PATCH(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', portfolioId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -115,9 +115,9 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -135,7 +135,7 @@ export async function DELETE(request: NextRequest) {
       .from('portfolios')
       .delete()
       .eq('id', portfolioId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
 
     if (error) {
       throw error

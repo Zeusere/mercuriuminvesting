@@ -10,12 +10,13 @@ export default async function StocksPage({ searchParams }: StocksPageProps) {
   const supabase = createServerSupabaseClient()
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+    error: authError
+  } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (authError || !user) {
     redirect('/login')
   }
 
-  return <StocksPageContent user={session.user} initialSymbol={searchParams.symbol} />
+  return <StocksPageContent user={user} initialSymbol={searchParams.symbol} />
 }

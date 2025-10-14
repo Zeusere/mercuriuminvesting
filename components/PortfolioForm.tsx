@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, X, Loader2, TrendingUp, BarChart3, AlertTriangle, Save, ArrowLeft } from 'lucide-react'
+import { Plus, X, Loader2, TrendingUp, BarChart3, AlertTriangle, Save, ArrowLeft, MessageSquare } from 'lucide-react'
 import { PortfolioStock, SearchResult, BacktestResult, MultiPeriodBacktest } from '@/types/stocks'
 import StockSearch from './StockSearch'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -16,9 +16,11 @@ interface PortfolioFormProps {
     stocks: PortfolioStock[]
     total_amount: number
   }
+  isChatOpen?: boolean
+  setIsChatOpen?: (open: boolean) => void
 }
 
-export default function PortfolioForm({ initialPortfolio }: PortfolioFormProps) {
+export default function PortfolioForm({ initialPortfolio, isChatOpen, setIsChatOpen }: PortfolioFormProps) {
   const router = useRouter()
   const [portfolioName, setPortfolioName] = useState(initialPortfolio?.name || '')
   const [stocks, setStocks] = useState<PortfolioStock[]>(initialPortfolio?.stocks || [])
@@ -213,6 +215,17 @@ export default function PortfolioForm({ initialPortfolio }: PortfolioFormProps) 
             }
           </p>
         </div>
+        
+        {/* AI Assistant Button - Only show if props are provided */}
+        {isChatOpen !== undefined && setIsChatOpen && (
+          <button
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+          >
+            <MessageSquare className="w-5 h-5" />
+            AI Assistant
+          </button>
+        )}
       </div>
 
       {/* Formulario */}

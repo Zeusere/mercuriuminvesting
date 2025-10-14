@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
-import { LogOut, Settings, TrendingUp, ChevronDown, Moon, Sun, Bot, BarChart3, MessageSquare, User as UserIcon } from 'lucide-react'
+import { LogOut, Settings, TrendingUp, ChevronDown, Moon, Sun, Bot, BarChart3, MessageSquare } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
+import Avatar from './Avatar'
 import Link from 'next/link'
 
 interface NavigationProps {
@@ -19,6 +20,22 @@ export default function Navigation({ user, currentPage }: NavigationProps) {
   const { theme, toggleTheme } = useTheme()
   const [resourcesOpen, setResourcesOpen] = useState(false)
   const [aiInvestorOpen, setAiInvestorOpen] = useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch(`/api/users/${user.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setUserProfile(data.profile)
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error)
+      }
+    }
+    fetchUserProfile()
+  }, [user.id])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -30,33 +47,35 @@ export default function Navigation({ user, currentPage }: NavigationProps) {
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            {/* Logo */}
-            <Link href="/dashboard">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center cursor-pointer">
-                <TrendingUp className="text-white" size={24} />
-              </div>
-            </Link>
+          {/* Logo */}
+          <Link href="/dashboard" className="flex items-center space-x-3">
+            <img 
+              src={theme === 'light' ? '/logo.png' : '/logo-dark.png'} 
+              alt="Mercurium" 
+              className="w-10 h-10"
+            />
+           
+          </Link>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex gap-4">
+          {/* Navigation - Centered */}
+          <nav className="hidden md:flex gap-12 absolute left-1/2 transform -translate-x-1/2">
               <Link
                 href="/dashboard"
-                className={currentPage === 'dashboard' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}
+                className={`text-base ${currentPage === 'dashboard' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
               >
                 Dashboard
               </Link>
               
               <Link
                 href="/portfolios"
-                className={currentPage === 'portfolios' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}
+                className={`text-base ${currentPage === 'portfolios' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
               >
                 Portfolios
               </Link>
 
               <Link
                 href="/social"
-                className={currentPage === 'social' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}
+                className={`text-base ${currentPage === 'social' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
               >
                 Social
               </Link>
@@ -67,7 +86,7 @@ export default function Navigation({ user, currentPage }: NavigationProps) {
                 onMouseEnter={() => setResourcesOpen(true)}
                 onMouseLeave={() => setResourcesOpen(false)}
               >
-                <button className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <button className="flex items-center gap-1 text-base text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                   Resources
                   <ChevronDown size={16} className={`transition-transform ${resourcesOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -107,7 +126,7 @@ export default function Navigation({ user, currentPage }: NavigationProps) {
                 onMouseEnter={() => setAiInvestorOpen(true)}
                 onMouseLeave={() => setAiInvestorOpen(false)}
               >
-                <button className={`flex items-center gap-1 ${currentPage === 'ai-investor' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>
+                <button className={`flex items-center gap-1 text-base ${currentPage === 'ai-investor' ? 'text-primary-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>
                   AI Investor
                   <ChevronDown size={16} className={`transition-transform ${aiInvestorOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -149,8 +168,7 @@ export default function Navigation({ user, currentPage }: NavigationProps) {
                   </div>
                 )}
               </div>
-            </nav>
-          </div>
+          </nav>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
@@ -169,10 +187,14 @@ export default function Navigation({ user, currentPage }: NavigationProps) {
             </button>
             <Link
               href={`/profile/${user.id}`}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="My Profile"
             >
-              <UserIcon size={20} />
+              <Avatar
+                src={userProfile?.avatar_url}
+                alt={userProfile?.display_name || user.email || 'User'}
+                size="sm"
+              />
             </Link>
             <button
               onClick={handleSignOut}

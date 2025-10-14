@@ -44,6 +44,10 @@ export default function ActiveStrategyViewer({ user, strategyId }: ActiveStrateg
   // Trade execution state
   const [pendingTrades, setPendingTrades] = useState<TradePreview[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
+  
+  // Delete strategy state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchStrategyData();
@@ -199,6 +203,29 @@ export default function ActiveStrategyViewer({ user, strategyId }: ActiveStrateg
       alert('Failed to execute trades. Please try again.');
     } finally {
       setIsExecuting(false);
+    }
+  }
+
+  async function handleDeleteStrategy() {
+    if (!strategy) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`${window.location.origin}/api/strategies/${strategyId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete strategy');
+      }
+
+      // Redirect to portfolios page after successful deletion
+      router.push('/portfolios');
+    } catch (err) {
+      console.error('Error deleting strategy:', err);
+      alert('Failed to delete strategy. Please try again.');
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   }
 
@@ -670,7 +697,57 @@ export default function ActiveStrategyViewer({ user, strategyId }: ActiveStrateg
             </table>
           </div>
         </div>
+
+        {/* Delete Strategy Section */}
+        <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+          <button
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+          >
+            Delete Strategy
+          </button>
+        </div>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Delete Strategy
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to delete this strategy? This action cannot be undone. All positions, transactions, and rebalance history will be permanently deleted.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteStrategy}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 flex items-center"
+              >
+                {isDeleting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Strategy'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js'
 import { Loader2, TrendingUp, Calendar, Edit, ArrowLeft } from 'lucide-react'
 import Navigation from '../Navigation'
 import PostCard from './PostCard'
+import Avatar from '../Avatar'
 import { UserProfile as UserProfileType, Post } from '@/types/social'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -36,6 +37,7 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
   const [isLoadingMainStrategy, setIsLoadingMainStrategy] = useState(false)
   const [activeTab, setActiveTab] = useState<'posts' | 'portfolios'>('posts')
   const [performanceLoaded, setPerformanceLoaded] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
 
   const isOwnProfile = user.id === profileId
 
@@ -77,6 +79,38 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
       console.error('Error fetching main strategy:', error)
     } finally {
       setIsLoadingMainStrategy(false)
+    }
+  }
+
+  const handleAvatarUpload = async (file: File) => {
+    setIsUploadingAvatar(true)
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+
+      const response = await fetch('/api/users/avatar', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Actualizar el perfil local con la nueva URL del avatar
+        if (profile) {
+          setProfile({
+            ...profile,
+            avatar_url: data.avatar_url
+          })
+        }
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error uploading avatar')
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      alert('Error uploading avatar')
+    } finally {
+      setIsUploadingAvatar(false)
     }
   }
 
@@ -159,15 +193,6 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
     }
   }
 
-  const getInitials = (name: string | null) => {
-    if (!name) return '?'
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
 
   if (isLoading) {
     return (
@@ -204,30 +229,29 @@ export default function UserProfile({ user, profileId }: UserProfileProps) {
       <Navigation user={user} currentPage="social" />
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-4xl mx-auto">
-          {/* Back button */}
-          <button
-            onClick={() => router.back()}
-            className="mb-4 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-          >
-            <ArrowLeft size={20} />
-            Back
-          </button>
+          {/* Back button - only show for other profiles */}
+          {!isOwnProfile && (
+            <button
+              onClick={() => router.back()}
+              className="mb-4 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            >
+              <ArrowLeft size={20} />
+              Back
+            </button>
+          )}
 
           {/* Profile Header */}
           <div className="card mb-6">
             <div className="flex items-start gap-6">
               {/* Avatar */}
-              <div className="flex-shrink-0 w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.display_name || ''}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span>{getInitials(profile.display_name)}</span>
-                )}
-              </div>
+              <Avatar
+                src={profile.avatar_url}
+                alt={profile.display_name || 'User'}
+                size="xl"
+                editable={isOwnProfile}
+                onUpload={handleAvatarUpload}
+                loading={isUploadingAvatar}
+              />
 
               {/* Info */}
               <div className="flex-1">

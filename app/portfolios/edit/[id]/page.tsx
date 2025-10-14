@@ -4,9 +4,9 @@ import EditPortfolioContent from '../../../../components/EditPortfolioContent'
 
 export default async function EditPortfolioPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (authError || !user) {
     redirect('/login')
   }
 
@@ -15,12 +15,12 @@ export default async function EditPortfolioPage({ params }: { params: { id: stri
     .from('portfolios')
     .select('*')
     .eq('id', params.id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (error || !portfolio) {
     redirect('/portfolios')
   }
 
-  return <EditPortfolioContent user={session.user} portfolio={portfolio} />
+  return <EditPortfolioContent user={user} portfolio={portfolio} />
 }

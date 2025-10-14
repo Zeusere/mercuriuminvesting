@@ -26,6 +26,11 @@ interface ActiveStrategyListItem {
   is_main?: boolean
 }
 
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+const CACHE_KEY_STRATEGIES = 'cached_strategies';
+const CACHE_KEY_PORTFOLIOS = 'cached_portfolios';
+const CACHE_KEY_TIMESTAMP = 'cache_timestamp';
+
 export default function PortfolioList() {
   const router = useRouter()
   const [savedPortfolios, setSavedPortfolios] = useState<SavedPortfolio[]>([])
@@ -34,9 +39,42 @@ export default function PortfolioList() {
   const [isLoadingStrategies, setIsLoadingStrategies] = useState(true)
 
   useEffect(() => {
-    fetchSavedPortfolios()
-    fetchStrategies()
+    loadDataWithCache()
   }, [])
+
+  const loadDataWithCache = () => {
+    // Check if we have valid cached data
+    const cachedTimestamp = sessionStorage.getItem(CACHE_KEY_TIMESTAMP);
+    const now = Date.now();
+    
+    if (cachedTimestamp) {
+      const cacheAge = now - parseInt(cachedTimestamp);
+      
+      // If cache is less than 15 minutes old, use it
+      if (cacheAge < CACHE_DURATION) {
+        const cachedStrategies = sessionStorage.getItem(CACHE_KEY_STRATEGIES);
+        const cachedPortfolios = sessionStorage.getItem(CACHE_KEY_PORTFOLIOS);
+        
+        if (cachedStrategies) {
+          setStrategies(JSON.parse(cachedStrategies));
+          setIsLoadingStrategies(false);
+        }
+        
+        if (cachedPortfolios) {
+          setSavedPortfolios(JSON.parse(cachedPortfolios));
+          setIsLoadingPortfolios(false);
+        }
+        
+        console.log('Loaded data from cache (age: ' + Math.round(cacheAge / 1000) + 's)');
+        return;
+      }
+    }
+    
+    // Cache is invalid or doesn't exist, fetch fresh data
+    console.log('Cache expired or not found, fetching fresh data');
+    fetchSavedPortfolios();
+    fetchStrategies();
+  }
 
   const fetchSavedPortfolios = async () => {
     setIsLoadingPortfolios(true)
@@ -46,6 +84,10 @@ export default function PortfolioList() {
         const data = await response.json()
         const portfolios = data.portfolios || data || []
         setSavedPortfolios(portfolios)
+        
+        // Save to cache
+        sessionStorage.setItem(CACHE_KEY_PORTFOLIOS, JSON.stringify(portfolios))
+        sessionStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString())
       }
     } catch (error) {
       console.error('Error fetching portfolios:', error)
@@ -61,12 +103,22 @@ export default function PortfolioList() {
       if (res.ok) {
         const data = await res.json()
         setStrategies(data.strategies || [])
+        
+        // Save to cache
+        sessionStorage.setItem(CACHE_KEY_STRATEGIES, JSON.stringify(data.strategies || []))
+        sessionStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString())
       }
     } catch (e) {
       console.error('Error fetching strategies:', e)
     } finally {
       setIsLoadingStrategies(false)
     }
+  }
+
+  const invalidateCache = () => {
+    sessionStorage.removeItem(CACHE_KEY_STRATEGIES);
+    sessionStorage.removeItem(CACHE_KEY_PORTFOLIOS);
+    sessionStorage.removeItem(CACHE_KEY_TIMESTAMP);
   }
 
   const setMainStrategy = async (strategyId: string) => {
@@ -79,6 +131,9 @@ export default function PortfolioList() {
       if (res.ok) {
         // Update local list
         setStrategies(prev => prev.map(s => ({ ...s, is_main: s.id === strategyId })))
+        // Update cache with new data
+        const updatedStrategies = strategies.map(s => ({ ...s, is_main: s.id === strategyId }));
+        sessionStorage.setItem(CACHE_KEY_STRATEGIES, JSON.stringify(updatedStrategies));
       } else {
         const data = await res.json().catch(() => ({}))
         alert(data.error || 'Failed to set main strategy')
@@ -125,11 +180,12 @@ export default function PortfolioList() {
 
       if (response.ok) {
         // Update local state optimistically
-        setSavedPortfolios(
-          savedPortfolios.map((p) =>
-            p.id === portfolioId ? { ...p, is_public: !currentStatus } : p
-          )
-        )
+        const updatedPortfolios = savedPortfolios.map((p) =>
+          p.id === portfolioId ? { ...p, is_public: !currentStatus } : p
+        );
+        setSavedPortfolios(updatedPortfolios);
+        // Update cache with new data
+        sessionStorage.setItem(CACHE_KEY_PORTFOLIOS, JSON.stringify(updatedPortfolios));
       } else {
         alert('Error updating portfolio visibility')
       }

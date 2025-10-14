@@ -40,6 +40,14 @@ interface NewsArticle {
   source: string
 }
 
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+const CACHE_KEY_STRATEGIES = 'dashboard_cached_strategies';
+const CACHE_KEY_NEWS = 'dashboard_cached_news';
+const CACHE_KEY_GAINERS = 'dashboard_cached_gainers';
+const CACHE_KEY_LOSERS = 'dashboard_cached_losers';
+const CACHE_KEY_MARKET_OPEN = 'dashboard_cached_market_open';
+const CACHE_KEY_TIMESTAMP = 'dashboard_cache_timestamp';
+
 export default function DashboardContent({ user }: DashboardContentProps) {
   const [activeStrategies, setActiveStrategies] = useState<any[]>([])
   const [gainers, setGainers] = useState<Gainer[]>([])
@@ -51,17 +59,76 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   const [marketOpen, setMarketOpen] = useState(false)
 
   useEffect(() => {
-    fetchActiveStrategies()
-    fetchGainers()
-    fetchNews()
+    loadDataWithCache()
   }, [])
+
+  const loadDataWithCache = () => {
+    // Check if we have valid cached data
+    const cachedTimestamp = sessionStorage.getItem(CACHE_KEY_TIMESTAMP);
+    const now = Date.now();
+    
+    let hasValidCache = false;
+    let needsStrategies = true;
+    let needsNews = true;
+    let needsGainers = true;
+    
+    if (cachedTimestamp) {
+      const cacheAge = now - parseInt(cachedTimestamp);
+      
+      // If cache is less than 15 minutes old, try to use it
+      if (cacheAge < CACHE_DURATION) {
+        hasValidCache = true;
+        
+        const cachedStrategies = sessionStorage.getItem(CACHE_KEY_STRATEGIES);
+        const cachedNews = sessionStorage.getItem(CACHE_KEY_NEWS);
+        const cachedGainers = sessionStorage.getItem(CACHE_KEY_GAINERS);
+        const cachedLosers = sessionStorage.getItem(CACHE_KEY_LOSERS);
+        const cachedMarketOpen = sessionStorage.getItem(CACHE_KEY_MARKET_OPEN);
+        
+        if (cachedStrategies) {
+          setActiveStrategies(JSON.parse(cachedStrategies));
+          setIsLoadingStrategies(false);
+          needsStrategies = false;
+        }
+        
+        if (cachedNews) {
+          setNews(JSON.parse(cachedNews));
+          setIsLoadingNews(false);
+          needsNews = false;
+        }
+        
+        if (cachedGainers && cachedLosers) {
+          setGainers(JSON.parse(cachedGainers));
+          setLosers(JSON.parse(cachedLosers));
+          setMarketOpen(cachedMarketOpen === 'true');
+          setIsLoadingGainers(false);
+          needsGainers = false;
+        }
+        
+        console.log('Dashboard: Loaded from cache (age: ' + Math.round(cacheAge / 1000) + 's)');
+      }
+    }
+    
+    // Fetch any data that wasn't in cache or cache expired
+    if (!hasValidCache || needsStrategies || needsNews || needsGainers) {
+      console.log('Dashboard: Fetching fresh data', { needsStrategies, needsNews, needsGainers });
+      if (needsStrategies) fetchActiveStrategies();
+      if (needsNews) fetchNews();
+      if (needsGainers) fetchGainers();
+    }
+  }
 
   const fetchActiveStrategies = async () => {
     try {
       const response = await fetch('/api/strategies?status=active')
       if (response.ok) {
         const data = await response.json()
-        setActiveStrategies(data.strategies || [])
+        const strategies = data.strategies || [];
+        setActiveStrategies(strategies)
+        
+        // Save to cache
+        sessionStorage.setItem(CACHE_KEY_STRATEGIES, JSON.stringify(strategies))
+        sessionStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString())
       }
     } catch (error) {
       console.error('Error fetching active strategies:', error)
@@ -75,9 +142,19 @@ export default function DashboardContent({ user }: DashboardContentProps) {
       const response = await fetch('/api/stocks/gainers')
       if (response.ok) {
         const data = await response.json()
-        setGainers(data.gainers || [])
-        setLosers(data.losers || [])
-        setMarketOpen(data.marketOpen || false)
+        const gainersData = data.gainers || [];
+        const losersData = data.losers || [];
+        const marketOpenData = data.marketOpen || false;
+        
+        setGainers(gainersData)
+        setLosers(losersData)
+        setMarketOpen(marketOpenData)
+        
+        // Save to cache
+        sessionStorage.setItem(CACHE_KEY_GAINERS, JSON.stringify(gainersData))
+        sessionStorage.setItem(CACHE_KEY_LOSERS, JSON.stringify(losersData))
+        sessionStorage.setItem(CACHE_KEY_MARKET_OPEN, marketOpenData.toString())
+        sessionStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString())
       } else {
         console.error('Failed to fetch gainers:', response.status)
         setGainers([])
@@ -97,7 +174,12 @@ export default function DashboardContent({ user }: DashboardContentProps) {
       const response = await fetch('/api/news')
       if (response.ok) {
         const data = await response.json()
-        setNews(data.news || [])
+        const newsData = data.news || [];
+        setNews(newsData)
+        
+        // Save to cache
+        sessionStorage.setItem(CACHE_KEY_NEWS, JSON.stringify(newsData))
+        sessionStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString())
       } else {
         console.error('Failed to fetch news:', response.status)
         setNews([])
@@ -145,8 +227,8 @@ export default function DashboardContent({ user }: DashboardContentProps) {
             <div className="flex items-center gap-2">
               <TrendingUp className="text-green-600" size={24} />
               <h2 className="text-2xl font-bold">Active Strategies</h2>
+              </div>
             </div>
-          </div>
 
           {isLoadingStrategies ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -285,8 +367,8 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                     <Link href="/ai-investor/create-strategy" className="btn-primary px-4 py-2 text-sm">
                       Create Portfolio
                     </Link>
-                  </div>
-                </div>
+            </div>
+          </div>
               )}
             </div>
 
@@ -334,14 +416,14 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
                             {index + 1}
-                          </div>
-                          <div>
+            </div>
+            <div>
                             <p className="font-bold text-base">{stock.symbol}</p>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
                               ${stock.price.toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
+              </p>
+            </div>
+          </div>
                         <div className="text-right">
                           <div className="flex items-center gap-1 text-green-600 dark:text-green-400 font-bold">
                             <ArrowUpRight size={18} />
@@ -353,12 +435,12 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                         </div>
                       </Link>
                     ))}
-                  </div>
+        </div>
                   <div className="mt-4 text-center">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {marketOpen ? 'Live data from Alpaca Markets' : 'Data from last trading session'}
                     </p>
-                  </div>
+          </div>
           </div>
               ) : (
                 <div className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 text-center py-12">

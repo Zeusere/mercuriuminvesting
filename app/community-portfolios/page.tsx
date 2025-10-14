@@ -4,11 +4,11 @@ import CommunityPortfoliosContent from '../../components/CommunityPortfoliosCont
 
 export default async function CommunityPortfoliosPage() {
   const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (authError || !user) {
     redirect('/login')
   }
 
-  return <CommunityPortfoliosContent user={session.user} />
+  return <CommunityPortfoliosContent user={user} />
 }

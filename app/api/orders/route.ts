@@ -7,9 +7,9 @@ import { v4 as uuidv4 } from 'uuid'
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('trading_orders')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (status) {
@@ -46,9 +46,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const newOrder: Partial<TradingOrder> = {
       id: uuidv4(),
-      user_id: session.user.id,
+      user_id: user.id,
       symbol: orderData.symbol,
       side: orderData.side,
       type: orderData.type,
@@ -96,9 +96,9 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -111,7 +111,7 @@ export async function PATCH(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', orderId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .select()
       .single()
 

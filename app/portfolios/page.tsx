@@ -6,12 +6,13 @@ export default async function PortfoliosPage() {
   const supabase = createServerSupabaseClient()
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+    error: authError
+  } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (authError || !user) {
     redirect('/login')
   }
 
-  return <PortfoliosPageContent user={session.user} />
+  return <PortfoliosPageContent user={user} />
 }

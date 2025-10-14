@@ -47,9 +47,9 @@ class BrokerSimulator {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       .from('trading_orders')
       .select('*')
       .eq('id', orderId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .single()
 
     if (fetchError || !order) {
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', orderId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
