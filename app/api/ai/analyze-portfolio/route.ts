@@ -196,12 +196,14 @@ async function fetchStockMetrics(
   const metricsPromises = stocks.map(async (stock) => {
     try {
       // Fetch 1-year historical data
+      // Using split-adjusted prices to avoid distortion from stock splits
       const barsUrl = `https://data.alpaca.markets/v2/stocks/${stock.symbol}/bars?` +
         `start=${startDate1Y.toISOString()}&` +
         `end=${endDate.toISOString()}&` +
         `timeframe=1Day&` +
         `limit=1000&` +
-        `feed=iex`
+        `feed=iex&` +
+        `adjustment=split`
 
       const barsResponse = await fetch(barsUrl, {
         headers: {

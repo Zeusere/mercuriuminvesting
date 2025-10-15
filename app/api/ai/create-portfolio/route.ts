@@ -529,13 +529,18 @@ async function enrichCandidatesWithMetrics(
     
     const batchPromises = batch.map(async (candidate) => {
       try {
-        // Fetch historical bars for this stock
+        // IMPORTANT: Using split-adjusted prices to avoid distortion from stock splits
+        // Without adjustment, a 10:1 split would show as -90% performance (incorrect)
+        // With adjustment, historical prices are retroactively adjusted for splits
+        // Example: NVDA had a 10:1 split in June 2024 - without adjustment, it would show -90% instead of actual +180%
+        // Note: Using IEX feed (free) with adjustment parameter - SIP feed requires paid subscription
         const barsUrl = `https://data.alpaca.markets/v2/stocks/${candidate.symbol}/bars?` + 
           `start=${startDate.toISOString()}&` +
           `end=${endDate.toISOString()}&` +
           `timeframe=${barsTimeframe}&` +
           `limit=1000&` +
-          `feed=iex`
+          `feed=iex&` +            // IEX feed (free tier, supports adjustment)
+          `adjustment=split`        // Adjust for stock splits/reverse splits
 
         const barsResponse = await fetch(barsUrl, {
           headers: {

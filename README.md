@@ -11,7 +11,10 @@ Mercurium is a next-generation investment platform that combines artificial inte
 - **Portfolio Analysis**: Get AI-powered insights on your investment strategies
 - **Stock Research**: Deep analysis of companies, sectors, and market trends
 - **Rebalancing Suggestions**: Optimize your portfolio allocation with AI recommendations
-- **Real Portfolio Integration**: Connect real brokerage accounts via Plaid and get AI analysis
+- **Real Portfolio Integration**: 🆕 Connect real brokerage accounts via Plaid and get professional AI analysis
+- **Tax Optimization**: 🆕 Identify tax loss harvesting opportunities and save on taxes
+- **Diversification Analysis**: 🆕 Assess concentration risk and sector allocation
+- **Benchmark Comparison**: 🆕 Compare your portfolio vs S&P 500, NASDAQ, and more
 
 ### 📊 Portfolio Management
 - **Strategy Builder**: Create and simulate investment strategies
@@ -407,6 +410,9 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 - **[PLAID_TESTING_GUIDE.md](./PLAID_TESTING_GUIDE.md)** - Testing Plaid features
 - **[PLAID_ENV_EUROPE.md](./PLAID_ENV_EUROPE.md)** - European configuration
 - **[AI_INTEGRATION.md](./AI_INTEGRATION.md)** - AI features documentation
+- **[AI_REAL_PORTFOLIO_GUIDE.md](./AI_REAL_PORTFOLIO_GUIDE.md)** - 🆕 AI Portfolio Advisor guide
+- **[AI_PORTFOLIO_ADVISOR_SUMMARY.md](./AI_PORTFOLIO_ADVISOR_SUMMARY.md)** - 🆕 Technical implementation summary
+- **[SPLIT_ADJUSTMENT_FIX.md](./SPLIT_ADJUSTMENT_FIX.md)** - 🔧 Critical fix for stock splits
 - **[COMMERCIALIZATION.md](./COMMERCIALIZATION.md)** - Business model
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
 - **[CHANGELOG.md](./CHANGELOG.md)** - Version history

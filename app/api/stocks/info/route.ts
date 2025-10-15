@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
     const snapshot = await snapshotResponse.json()
 
     // Get 3-month historical data
+    // Using split-adjusted prices to avoid distortion from stock splits
     const endDate = new Date()
     const startDate = new Date()
     startDate.setMonth(endDate.getMonth() - 3)
@@ -53,7 +54,8 @@ export async function GET(request: NextRequest) {
       `end=${endDate.toISOString()}&` +
       `timeframe=1Day&` +
       `limit=100&` +
-      `feed=iex`,
+      `feed=iex&` +
+      `adjustment=split`,
       {
         headers: {
           'APCA-API-KEY-ID': alpacaKey,

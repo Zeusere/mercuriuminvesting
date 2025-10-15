@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RefreshCw, TrendingUp, TrendingDown, DollarSign, PieChart, Calendar, AlertCircle } from 'lucide-react'
+import { RefreshCw, TrendingUp, TrendingDown, DollarSign, PieChart, Calendar, AlertCircle, Bot, MessageSquare } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import ChatInterface from './ai-investor/ChatInterface'
+import { v4 as uuidv4 } from 'uuid'
+import type { ChatMessage } from '@/types/ai-investor'
 
 interface Holding {
   symbol: string
@@ -43,6 +46,16 @@ export default function RealPortfolioViewer({ connectionId, onSync }: RealPortfo
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // AI Assistant state
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [messages, setMessages] = useState<ChatMessage[]>([{
+    id: uuidv4(),
+    role: 'assistant',
+    content: '👋 Hi! I\'m your AI Investment Advisor. I can analyze your real portfolio and provide:\n\n• **Portfolio Analysis** - Risk assessment and diversification\n• **Rebalancing Suggestions** - Optimize your allocation\n• **Stock Insights** - Deep dive into your holdings\n• **Tax Optimization** - Tax loss harvesting opportunities\n• **Performance Review** - Compare vs benchmarks\n\nWhat would you like to know about your portfolio? 📊',
+    timestamp: new Date()
+  }])
+  const [isChatLoading, setIsChatLoading] = useState(false)
 
   const loadHoldings = async () => {
     setIsLoading(true)
@@ -108,6 +121,72 @@ export default function RealPortfolioViewer({ connectionId, onSync }: RealPortfo
     }
   }
 
+  const handleSendMessage = async (messageContent: string) => {
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      role: 'user',
+      content: messageContent,
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, userMessage])
+    setIsChatLoading(true)
+
+    try {
+      // Preparar contexto del portfolio real
+      const portfolioContext = {
+        holdings: holdings.map(h => ({
+          symbol: h.symbol,
+          name: h.name,
+          quantity: h.total_quantity,
+          value: h.total_value,
+          costBasis: h.total_cost_basis,
+          gainLoss: h.gain_loss,
+          gainLossPercent: h.gain_loss_percent,
+          weight: h.weight_percent
+        })),
+        summary: {
+          totalValue: summary?.total_value || 0,
+          totalGainLoss: summary?.total_gain_loss || 0,
+          totalGainLossPercent: summary?.total_gain_loss_percent || 0,
+          uniqueSecurities: summary?.unique_securities || 0
+        }
+      }
+
+      const chatResponse = await fetch('/api/ai/analyze-real-portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: messageContent, 
+          context: messages,
+          portfolio: portfolioContext
+        })
+      })
+      
+      const chatData = await chatResponse.json()
+
+      if (!chatResponse.ok) {
+        throw new Error(chatData.error || 'Failed to get AI response')
+      }
+
+      setMessages(prev => [...prev, { 
+        id: uuidv4(), 
+        role: 'assistant', 
+        content: chatData.message, 
+        timestamp: new Date() 
+      }])
+    } catch (e: any) {
+      console.error('AI chat error:', e)
+      setMessages(prev => [...prev, { 
+        id: uuidv4(), 
+        role: 'assistant', 
+        content: '❌ Sorry, I encountered an error analyzing your portfolio. Please try again.', 
+        timestamp: new Date() 
+      }])
+    } finally {
+      setIsChatLoading(false)
+    }
+  }
+
   useEffect(() => {
     loadHoldings()
   }, [connectionId])
@@ -165,6 +244,43 @@ export default function RealPortfolioViewer({ connectionId, onSync }: RealPortfo
 
   return (
     <div className="space-y-6">
+      {/* AI Assistant Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+        >
+          <MessageSquare size={20} />
+          <span className="font-medium">AI Assistant</span>
+          {!isChatOpen && (
+            <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+              Ask me anything
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* AI Chat Section - Only visible when open */}
+      {isChatOpen && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <Bot className="text-purple-600" size={24} />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">AI Investment Advisor</h2>
+            <span className="ml-auto text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full">
+              Online
+            </span>
+          </div>
+          <div className="h-96">
+            <ChatInterface
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              isLoading={isChatLoading}
+              placeholder="Ask me about your portfolio: analysis, rebalancing, tax optimization, etc."
+            />
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Value */}
