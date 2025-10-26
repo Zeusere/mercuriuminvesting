@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Loader2, Building2, Globe, DollarSign, BarChart3, Star } from 'lucide-react'
+import { TrendingUp, TrendingDown, Loader2, Building2, Globe, DollarSign, BarChart3, Star, MessageSquare } from 'lucide-react'
 import { StockQuote, StockProfile, StockMetrics } from '@/types/stocks'
 import StockChart from './StockChart'
+import Link from 'next/link'
 
 interface StockDetailProps {
   symbol: string
@@ -157,6 +158,17 @@ export default function StockDetail({ symbol }: StockDetailProps) {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Join Community Button */}
+        <div className="mt-4 mb-4">
+          <Link
+            href={`/stock-rooms/${symbol}`}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+          >
+            <MessageSquare size={18} />
+            <span>Join {symbol} Community</span>
+          </Link>
         </div>
 
         {/* Stats rápidas */}

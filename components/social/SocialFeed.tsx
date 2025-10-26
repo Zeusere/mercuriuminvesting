@@ -6,6 +6,8 @@ import { Loader2, Users } from 'lucide-react'
 import Navigation from '../Navigation'
 import PostComposer from './PostComposer'
 import PostCard from './PostCard'
+import MyFavoriteRooms from '../stock-rooms/MyFavoriteRooms'
+import TrendingStockRooms from '../stock-rooms/TrendingStockRooms'
 import { Post } from '@/types/social'
 
 interface SocialFeedProps {
@@ -74,15 +76,19 @@ export default function SocialFeed({ user }: SocialFeedProps) {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation user={user} currentPage="social" />
       <main className="container mx-auto px-4 py-24">
-        <div className="max-w-3xl mx-auto">
-          {/* Header */}
-          
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - My Favorite Rooms */}
+          <aside className="hidden lg:block lg:col-span-3">
+            <MyFavoriteRooms user={user} />
+          </aside>
 
-          {/* Post Composer */}
-          <PostComposer onPostCreated={fetchPosts} />
+          {/* Main Content - Social Feed */}
+          <div className="lg:col-span-6">
+            {/* Post Composer */}
+            <PostComposer onPostCreated={fetchPosts} />
 
-          {/* Feed */}
-          <div className="space-y-4">
+            {/* Feed */}
+            <div className="space-y-4">
             {isLoading ? (
               // Skeleton loaders
               <>
@@ -115,7 +121,13 @@ export default function SocialFeed({ user }: SocialFeedProps) {
                 <PostCard key={post.id} post={post} onLikeToggle={handleLikeToggle} />
               ))
             )}
+            </div>
           </div>
+
+          {/* Right Sidebar - Trending Rooms */}
+          <aside className="hidden lg:block lg:col-span-3">
+            <TrendingStockRooms />
+          </aside>
         </div>
       </main>
     </div>

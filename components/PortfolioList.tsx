@@ -31,7 +31,7 @@ const CACHE_KEY_STRATEGIES = 'cached_strategies';
 const CACHE_KEY_PORTFOLIOS = 'cached_portfolios';
 const CACHE_KEY_TIMESTAMP = 'cache_timestamp';
 
-export default function PortfolioList() {
+export default function PortfolioList({ userId }: { userId?: string }) {
   const router = useRouter()
   const [savedPortfolios, setSavedPortfolios] = useState<SavedPortfolio[]>([])
   const [isLoadingPortfolios, setIsLoadingPortfolios] = useState(true)
@@ -43,37 +43,46 @@ export default function PortfolioList() {
   }, [])
 
   const loadDataWithCache = () => {
-    // Check if we have valid cached data
+    // Check if we have valid cached data (invalidate when user changes)
     const cachedTimestamp = sessionStorage.getItem(CACHE_KEY_TIMESTAMP);
+    const cachedForUser = sessionStorage.getItem('cache_user_id');
+    if (userId && cachedForUser !== userId) {
+      sessionStorage.removeItem(CACHE_KEY_STRATEGIES);
+      sessionStorage.removeItem(CACHE_KEY_PORTFOLIOS);
+      sessionStorage.setItem('cache_user_id', userId);
+    }
     const now = Date.now();
-    
+
+    let usedCache = false;
     if (cachedTimestamp) {
       const cacheAge = now - parseInt(cachedTimestamp);
-      
-      // If cache is less than 15 minutes old, use it
       if (cacheAge < CACHE_DURATION) {
         const cachedStrategies = sessionStorage.getItem(CACHE_KEY_STRATEGIES);
         const cachedPortfolios = sessionStorage.getItem(CACHE_KEY_PORTFOLIOS);
-        
+
         if (cachedStrategies) {
           setStrategies(JSON.parse(cachedStrategies));
           setIsLoadingStrategies(false);
+          usedCache = true;
         }
-        
+
         if (cachedPortfolios) {
           setSavedPortfolios(JSON.parse(cachedPortfolios));
           setIsLoadingPortfolios(false);
+          usedCache = true;
         }
-        
+
         console.log('Loaded data from cache (age: ' + Math.round(cacheAge / 1000) + 's)');
-        return;
       }
     }
-    
-    // Cache is invalid or doesn't exist, fetch fresh data
-    console.log('Cache expired or not found, fetching fresh data');
-    fetchSavedPortfolios();
-    fetchStrategies();
+
+    // Fetch fresh data if cache missing for any section or cache invalid
+    if (!usedCache || !sessionStorage.getItem(CACHE_KEY_STRATEGIES)) {
+      fetchStrategies();
+    }
+    if (!usedCache || !sessionStorage.getItem(CACHE_KEY_PORTFOLIOS)) {
+      fetchSavedPortfolios();
+    }
   }
 
   const fetchSavedPortfolios = async () => {
@@ -88,6 +97,7 @@ export default function PortfolioList() {
         // Save to cache
         sessionStorage.setItem(CACHE_KEY_PORTFOLIOS, JSON.stringify(portfolios))
         sessionStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString())
+        if (userId) sessionStorage.setItem('cache_user_id', userId)
       }
     } catch (error) {
       console.error('Error fetching portfolios:', error)
@@ -107,6 +117,7 @@ export default function PortfolioList() {
         // Save to cache
         sessionStorage.setItem(CACHE_KEY_STRATEGIES, JSON.stringify(data.strategies || []))
         sessionStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString())
+        if (userId) sessionStorage.setItem('cache_user_id', userId)
       }
     } catch (e) {
       console.error('Error fetching strategies:', e)

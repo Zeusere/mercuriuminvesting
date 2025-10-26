@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import Navigation from './Navigation';
 import { 
   Loader2, ArrowLeft, AlertCircle, TrendingUp, TrendingDown, 
   DollarSign, Activity, AlertTriangle, MessageSquare, Send, 
-  CheckCircle, PauseCircle, XCircle, Edit3, BarChart3
+  CheckCircle, PauseCircle, XCircle, Edit3, BarChart3, Zap
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import AutomationTab from './automation/AutomationTab';
+import AutomationSidebar from './automation/AutomationSidebar';
 import type { ActiveStrategy, StrategyPosition, StrategyTransaction, AIStrategyRecommendation, TradePreview } from '@/types/strategy';
 
 interface Message {
@@ -48,6 +50,10 @@ export default function ActiveStrategyViewer({ user, strategyId }: ActiveStrateg
   // Delete strategy state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState('overview');
+
 
   useEffect(() => {
     fetchStrategyData();
@@ -265,11 +271,34 @@ export default function ActiveStrategyViewer({ user, strategyId }: ActiveStrateg
   const totalReturn = strategy.total_return_pct || 0;
   const isPositiveReturn = totalReturn >= 0;
 
+  // Handle automation toggle
+  const handleToggleAutomation = async (enabled: boolean) => {
+    try {
+      const response = await fetch(`/api/strategies/${strategyId}/automation`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          automation_enabled: enabled,
+        }),
+      });
+
+      if (response.ok) {
+        setStrategy(prev => prev ? { ...prev, automation_enabled: enabled } : null);
+      } else {
+        console.error('Failed to toggle automation');
+      }
+    } catch (error) {
+      console.error('Error toggling automation:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation user={user} currentPage="portfolios" />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -367,6 +396,268 @@ export default function ActiveStrategyViewer({ user, strategyId }: ActiveStrateg
             </p>
           </div>
         </div>
+
+        {/* Main Content with Sidebar */}
+        <div className="flex gap-6">
+          {/* Left Content - Main Strategy Info */}
+          <div className="flex-1">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow">
+                <TabsTrigger 
+                  value="overview"
+                  className="data-[state=active]:bg-primary-600 data-[state=active]:text-white"
+                >
+                  <BarChart3 size={16} className="mr-2" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="transactions"
+                  className="data-[state=active]:bg-primary-600 data-[state=active]:text-white"
+                >
+                  <Activity size={16} className="mr-2" />
+                  Transactions
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Overview Tab */}
+              <TabsContent value="overview">
+                <div className="space-y-6">
+
+        {/* AI Chat Interface (Collapsible) */}
+        {showChat && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 overflow-hidden">
+            <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+              <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-purple-600" />
+                AI Strategy Assistant
+              </h3>
+            </div>
+            
+            <div className="h-96 overflow-y-auto p-4 space-y-4">
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg p-4 ${
+                      msg.role === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    
+                    {msg.trades && msg.trades.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
+                        <p className="font-medium mb-2">Recommended Trades:</p>
+                        <div className="space-y-2">
+                          {msg.trades.map((trade, i) => (
+                            <div key={i} className="text-sm bg-white dark:bg-gray-800 rounded p-2">
+                              <span className={`font-medium ${trade.type === 'BUY' ? 'text-green-600' : 'text-red-600'}`}>
+                                {trade.type}
+                              </span> {
+                                trade.type === 'BUY' 
+                                  ? `${((trade.amount || 0) / (trade.price || 1)).toFixed(2)} shares of ${trade.symbol} ($${trade.amount?.toFixed(2) || 0})` 
+                                  : `${trade.quantity?.toFixed(2) || 0} shares of ${trade.symbol}`
+                              } @ ${trade.price?.toFixed(2) || 0}
+                              {trade.reason && <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">{trade.reason}</p>}
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => handleApplyTrades(msg.trades!)}
+                          className="mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors w-full"
+                        >
+                          Apply These Changes
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {isSending && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-gray-600 dark:text-gray-400" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Ask me about your strategy, positions, or market conditions..."
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isSending}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={isSending || !userInput.trim()}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  {isSending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* Positions Table */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Current Positions</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Symbol
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Quantity
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Avg Price
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Current Price
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Value
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Return
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {positions.map((position) => {
+                  const returnPct = position.current_price && position.average_price 
+                    ? ((position.current_price - position.average_price) / position.average_price) * 100
+                    : 0;
+                  const isPositive = returnPct >= 0;
+                  
+                  return (
+                    <tr key={position.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900 dark:text-white">{position.symbol}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900 dark:text-white">
+                        {position.quantity.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900 dark:text-white">
+                        ${position.average_price.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900 dark:text-white">
+                        ${position.current_price?.toFixed(2) || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900 dark:text-white">
+                        ${position.current_value?.toFixed(2) || 'N/A'}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-right font-medium ${
+                        isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {position.current_price ? `${isPositive ? '+' : ''}${returnPct.toFixed(2)}%` : 'N/A'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+            </div>
+          </TabsContent>
+
+          {/* Transactions Tab */}
+          <TabsContent value="transactions">
+            {/* Recent Transactions */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Symbol
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Quantity
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Notes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {transactions.slice(0, 20).map((tx) => (
+                      <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {format(new Date(tx.transaction_date), 'MMM d, yyyy HH:mm')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            tx.type === 'BUY' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : tx.type === 'SELL'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+                          }`}>
+                            {tx.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                          {tx.symbol || '—'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
+                          {tx.quantity?.toFixed(2) || '—'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
+                          {tx.price ? `$${tx.price.toFixed(2)}` : '—'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                          <span className={tx.amount > 0 ? 'text-green-600' : 'text-red-600'}>
+                            {tx.amount > 0 ? '+' : ''}${Math.abs(tx.amount).toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          {tx.notes || '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
         {/* AI Chat Interface (Collapsible) */}
         {showChat && (
@@ -623,78 +914,30 @@ export default function ActiveStrategyViewer({ user, strategyId }: ActiveStrateg
             </table>
           </div>
         </div>
-
-        {/* Recent Transactions */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          <div className="border-b border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
+          </TabsContent>
+        </Tabs>
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Symbol
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Notes
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {transactions.slice(0, 20).map((tx) => (
-                  <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {format(new Date(tx.transaction_date), 'MMM d, yyyy HH:mm')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        tx.type === 'BUY' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          : tx.type === 'SELL'
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-                      }`}>
-                        {tx.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {tx.symbol || '—'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
-                      {tx.quantity?.toFixed(2) || '—'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
-                      {tx.price ? `$${tx.price.toFixed(2)}` : '—'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                      <span className={tx.amount > 0 ? 'text-green-600' : 'text-red-600'}>
-                        {tx.amount > 0 ? '+' : ''}${Math.abs(tx.amount).toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      {tx.notes || '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          {/* Right Sidebar - Automation Controls */}
+          <div className="w-80 flex-shrink-0">
+            <AutomationSidebar
+              strategyId={strategyId}
+              strategyName={strategy.name}
+              isAutomationEnabled={strategy.automation_enabled || false}
+              onToggleAutomation={handleToggleAutomation}
+              onSaveChanges={() => {
+                // Handle save changes
+                console.log('Save changes clicked');
+              }}
+              onUndo={() => {
+                // Handle undo
+                console.log('Undo clicked');
+              }}
+              onRedo={() => {
+                // Handle redo
+                console.log('Redo clicked');
+              }}
+            />
           </div>
         </div>
 

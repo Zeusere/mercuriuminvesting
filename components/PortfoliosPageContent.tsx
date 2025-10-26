@@ -60,7 +60,7 @@ export default function PortfoliosPageContent({ user }: PortfoliosPageContentPro
           </TabsList>
 
           <TabsContent value="strategies">
-            <PortfolioList />
+            <PortfolioList userId={user.id} />
           </TabsContent>
 
           <TabsContent value="real-portfolio" key={refreshKey}>

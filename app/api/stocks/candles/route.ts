@@ -28,13 +28,16 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(parseInt(from) * 1000).toISOString()
     const endDate = new Date(parseInt(to) * 1000).toISOString()
 
-    // Obtener datos históricos de Alpaca usando el feed IEX (gratuito)
+    // Obtener datos históricos de Alpaca usando el feed IEX (gratuito) y precios ajustados por splits
     const bars = await client.getBarsV2(symbol, {
       start: startDate,
       end: endDate,
       timeframe: '1Day', // Barras diarias
       limit: 10000,
-      feed: 'iex' // Usar feed IEX para plan gratuito
+      feed: 'iex', // Usar feed IEX para plan gratuito
+      // Ajuste por splits para evitar distorsiones en gráficos y cálculos de performance
+      // Ref: SPLIT_ADJUSTMENT_FIX.md
+      adjustment: 'split' as any
     })
 
     // Convertir datos de Alpaca al formato que espera el frontend

@@ -50,6 +50,8 @@ const CACHE_KEY_TIMESTAMP = 'dashboard_cache_timestamp';
 
 export default function DashboardContent({ user }: DashboardContentProps) {
   const [activeStrategies, setActiveStrategies] = useState<any[]>([])
+  const [topStrategies, setTopStrategies] = useState<any[]>([])
+  const [trendingSymbols, setTrendingSymbols] = useState<Array<{ symbol: string; portfoliosCount: number }>>([])
   const [gainers, setGainers] = useState<Gainer[]>([])
   const [losers, setLosers] = useState<Loser[]>([])
   const [news, setNews] = useState<NewsArticle[]>([])
@@ -60,6 +62,8 @@ export default function DashboardContent({ user }: DashboardContentProps) {
 
   useEffect(() => {
     loadDataWithCache()
+    fetchCommunityTrending()
+    fetchTopStrategies()
   }, [])
 
   const loadDataWithCache = () => {
@@ -115,6 +119,30 @@ export default function DashboardContent({ user }: DashboardContentProps) {
       if (needsStrategies) fetchActiveStrategies();
       if (needsNews) fetchNews();
       if (needsGainers) fetchGainers();
+    }
+  }
+
+  const fetchCommunityTrending = async () => {
+    try {
+      const res = await fetch('/api/community/trending-stocks')
+      if (res.ok) {
+        const data = await res.json()
+        setTrendingSymbols(data.symbols || [])
+      }
+    } catch (e) {
+      console.error('trending-stocks', e)
+    }
+  }
+
+  const fetchTopStrategies = async () => {
+    try {
+      const res = await fetch('/api/strategies/top?limit=5')
+      if (res.ok) {
+        const data = await res.json()
+        setTopStrategies(data.strategies || [])
+      }
+    } catch (e) {
+      console.error('top strategies', e)
     }
   }
 
@@ -219,72 +247,64 @@ export default function DashboardContent({ user }: DashboardContentProps) {
           <p className="text-gray-600 dark:text-gray-400">Here&apos;s what&apos;s happening with your investments today</p>
         </div>
 
-        {/* Removed My Main Strategy section per request */}
-
-        {/* Active Strategies Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="text-green-600" size={24} />
-              <h2 className="text-2xl font-bold">Active Strategies</h2>
+        {/* Community Insights Top Row */}
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Top Strategies This Month */}
+          <div className="card bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+            <div className="flex items-center gap-3 mb-4">
+              <Trophy className="text-green-600" size={28} />
+              <div>
+                <h3 className="text-lg font-bold">Top Performing Strategies</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">This Month</p>
               </div>
             </div>
-
-          {isLoadingStrategies ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="card animate-pulse">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          ) : activeStrategies.length === 0 ? (
-            <div className="card text-center py-8">
-              <TrendingUp size={48} className="mx-auto mb-3 opacity-50 text-gray-400" />
-              <p className="text-lg mb-2 font-semibold">No active strategies</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Run a strategy from one of your portfolios to start tracking live performance
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeStrategies.map((strategy) => {
-                const totalReturn = strategy.total_return_pct || 0;
-                const isPositive = totalReturn >= 0;
-                return (
-                  <Link
-                    key={strategy.id}
-                    href={`/strategies/${strategy.id}`}
-                    className="card hover:scale-105 transition-transform cursor-pointer bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-transparent hover:border-green-500"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-bold text-lg">{strategy.name}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        strategy.status === 'active' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-                      }`}>
-                        {strategy.status}
-                      </span>
+            <div className="space-y-2">
+              {topStrategies.length === 0 ? (
+                <p className="text-sm text-gray-500">No data yet</p>
+              ) : (
+                topStrategies.map((s: any) => (
+                  <Link key={s.id} href={`/strategies/${s.id}`} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:scale-102 transition-transform">
+                    <div>
+                      <p className="font-semibold text-sm">{s.name}</p>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                      <p>Initial: ${strategy.initial_capital.toLocaleString()}</p>
-                      <p>Current: ${(strategy.current_capital || strategy.initial_capital).toLocaleString()}</p>
-                      <div className={`font-bold text-lg flex items-center gap-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                        {isPositive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                        {isPositive ? '+' : ''}{totalReturn.toFixed(2)}%
-                      </div>
-                    </div>
-                    <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                      Started {new Date(strategy.start_date).toLocaleDateString()}
+                    <div className="flex items-center gap-1 text-green-600 font-bold">
+                      <ArrowUpRight size={16} />
+                      <span>{(s.monthlyReturnPct ?? 0).toFixed(2)}%</span>
                     </div>
                   </Link>
-                );
-              })}
+                ))
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Trending Stocks in Community */}
+          <div className="card bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+            <div className="flex items-center gap-3 mb-4">
+              <TrendingUp className="text-purple-600" size={28} />
+              <div>
+                <h3 className="text-lg font-bold">Trending in Community</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Most Added Stocks</p>
+              </div>
             </div>
+            <div className="space-y-2">
+              {trendingSymbols.length === 0 ? (
+                <p className="text-sm text-gray-500">No data yet</p>
+              ) : (
+                trendingSymbols.map((t, i) => (
+                  <Link key={t.symbol} href={`/stocks?symbol=${t.symbol}`} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:scale-102 transition-transform">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">{i+1}</div>
+                      <span className="font-semibold">{t.symbol}</span>
+                    </div>
+                    <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">{t.portfoliosCount} portfolios</span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Removed Active Strategies section */}
 
         {/* News & Gainers Section */}
         <div className="mb-8">
@@ -543,84 +563,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
           </div>
         </div>
 
-        {/* Community Section - Coming Soon */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="text-primary-600" size={24} />
-            <h2 className="text-2xl font-bold">Community Insights</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Top Performers Placeholder */}
-            <div className="card bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-              <div className="flex items-center gap-3 mb-4">
-                <Trophy className="text-green-600" size={32} />
-                <div>
-                  <h3 className="text-lg font-bold">Top Performing Portfolios</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">This Month</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <p className="font-semibold text-sm">Growth Stocks 2024</p>
-                    <p className="text-xs text-gray-500">by @investor_pro</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-green-600 font-bold">
-                    <ArrowUpRight size={16} />
-                    <span>+24.5%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <p className="font-semibold text-sm">Tech Leaders</p>
-                    <p className="text-xs text-gray-500">by @tech_investor</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-green-600 font-bold">
-                    <ArrowUpRight size={16} />
-                    <span>+18.2%</span>
-                  </div>
-                </div>
-                <div className="text-center pt-2">
-                  <p className="text-xs text-gray-500 italic">Coming Soon - Community Feature</p>
-              </div>
-          </div>
-        </div>
-
-            {/* Trending Stocks Placeholder */}
-            <div className="card bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-              <div className="flex items-center gap-3 mb-4">
-                <TrendingUp className="text-purple-600" size={32} />
-                <div>
-                  <h3 className="text-lg font-bold">Trending in Community</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Most Added Stocks</p>
-                </div>
-              </div>
-          <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <p className="font-semibold">AAPL</p>
-                    <p className="text-xs text-gray-500">Apple Inc.</p>
-                  </div>
-                  <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">
-                    234 portfolios
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <p className="font-semibold">MSFT</p>
-                    <p className="text-xs text-gray-500">Microsoft</p>
-                  </div>
-                  <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">
-                    198 portfolios
-                  </span>
-                </div>
-                <div className="text-center pt-2">
-                  <p className="text-xs text-gray-500 italic">Coming Soon - Community Feature</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Removed old Community Insights placeholders */}
       </main>
     </div>
   )

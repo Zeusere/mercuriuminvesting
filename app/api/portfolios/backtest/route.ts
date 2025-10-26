@@ -19,13 +19,14 @@ async function fetchStockHistory(
   const startDate = new Date(from * 1000).toISOString()
   const endDate = new Date(to * 1000).toISOString()
 
-  // Obtener datos históricos de Alpaca usando el feed IEX (gratuito)
+  // Obtener datos históricos de Alpaca usando el feed IEX (gratuito) con ajuste por splits
   const bars = await client.getBarsV2(symbol, {
     start: startDate,
     end: endDate,
     timeframe: '1Day',
     limit: 10000,
-    feed: 'iex' // Usar feed IEX para plan gratuito
+    feed: 'iex', // Usar feed IEX para plan gratuito
+    adjustment: 'split' as any
   })
 
   const dates: number[] = []

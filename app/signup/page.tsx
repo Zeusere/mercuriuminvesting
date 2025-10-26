@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/supabase/client'
@@ -9,6 +9,8 @@ import { Mail, Lock, User, Loader2 } from 'lucide-react'
 export default function SignupPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
+  const [usernameStatus, setUsernameStatus] = useState<'idle'|'checking'|'available'|'taken'|'invalid'>('idle')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -21,12 +23,29 @@ export default function SignupPage() {
     setError('')
 
     try {
+      const uname = username.trim().toLowerCase()
+      // quick client validation
+      if (!/^([a-z0-9_]{3,20})$/.test(uname)) {
+        throw new Error('Username must be 3-20 chars, letters/numbers/underscore')
+      }
+
+      // check uniqueness server-side
+      setUsernameStatus('checking')
+      const chk = await fetch(`/api/users/check-username?u=${encodeURIComponent(uname)}`)
+      const chkData = await chk.json()
+      if (!chk.ok || !chkData.available) {
+        setUsernameStatus('taken')
+        throw new Error('Username not available')
+      }
+      setUsernameStatus('available')
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: name,
+            username: uname,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -43,6 +62,24 @@ export default function SignupPage() {
       setLoading(false)
     }
   }
+
+  // Debounced availability check as user types
+  useEffect(() => {
+    const uname = username.trim().toLowerCase()
+    if (!uname) { setUsernameStatus('idle'); return }
+    if (!/^([a-z0-9_]{3,20})$/.test(uname)) { setUsernameStatus('invalid'); return }
+    const t = setTimeout(async () => {
+      setUsernameStatus('checking')
+      try {
+        const res = await fetch(`/api/users/check-username?u=${encodeURIComponent(uname)}`)
+        const data = await res.json()
+        setUsernameStatus(res.ok && data.available ? 'available' : 'taken')
+      } catch {
+        setUsernameStatus('idle')
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [username])
 
   const handleGoogleSignup = async () => {
     setLoading(true)
@@ -126,6 +163,33 @@ export default function SignupPage() {
 
           {/* Email Signup Form */}
           <form onSubmit={handleEmailSignup} className="space-y-4">
+            {/* Username */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <User
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="input-field pl-10"
+                  placeholder="your_nickname"
+                  required
+                />
+              </div>
+              <p className="text-xs mt-1">
+                {usernameStatus === 'checking' && <span className="text-gray-500">Checking availability…</span>}
+                {usernameStatus === 'available' && <span className="text-green-600">Available</span>}
+                {usernameStatus === 'taken' && <span className="text-red-600">Not available</span>}
+                {usernameStatus === 'invalid' && <span className="text-red-600">3-20 chars, letters/numbers/_</span>}
+              </p>
+            </div>
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-2">
                 Full Name
