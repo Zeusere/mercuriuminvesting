@@ -7,6 +7,7 @@ import { es } from 'date-fns/locale'
 import ChatInterface from './ai-investor/ChatInterface'
 import { v4 as uuidv4 } from 'uuid'
 import type { ChatMessage } from '@/types/ai-investor'
+import { buildConversationPayload } from '@/lib/ai/conversation'
 
 interface Holding {
   symbol: string
@@ -152,12 +153,16 @@ export default function RealPortfolioViewer({ connectionId, onSync }: RealPortfo
         }
       }
 
+      const conversationPayload = buildConversationPayload(messages, {
+        includeMessage: userMessage,
+      })
+
       const chatResponse = await fetch('/api/ai/analyze-real-portfolio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: messageContent, 
-          context: messages,
+        body: JSON.stringify({
+          message: messageContent,
+          context: conversationPayload,
           portfolio: portfolioContext
         })
       })

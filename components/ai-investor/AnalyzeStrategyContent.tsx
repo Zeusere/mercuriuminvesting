@@ -9,6 +9,7 @@ import AnalyzeMode from './AnalyzeMode'
 import { ChatMessage, PortfolioAnalysis } from '@/types/ai-investor'
 import { MultiPeriodBacktest } from '@/types/stocks'
 import { v4 as uuidv4 } from 'uuid'
+import { buildConversationPayload } from '@/lib/ai/conversation'
 
 interface AnalyzeStrategyContentProps {
   user: User
@@ -40,13 +41,17 @@ export default function AnalyzeStrategyContent({ user }: AnalyzeStrategyContentP
     setIsLoading(true)
 
     try {
+      const conversationPayload = buildConversationPayload(messages, {
+        includeMessage: userMessage,
+      })
+
       // Call conversational AI
       const chatResponse = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: messageContent,
-          context: messages,
+          context: conversationPayload,
           currentAnalysis: portfolioAnalysis
         })
       })

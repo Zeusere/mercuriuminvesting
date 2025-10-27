@@ -9,6 +9,7 @@ import PortfolioBuilder from '../PortfolioBuilder'
 import { ChatMessage, StockRecommendation } from '@/types/ai-investor'
 import { PortfolioStock } from '@/types/stocks'
 import { v4 as uuidv4 } from 'uuid'
+import { buildConversationPayload } from '@/lib/ai/conversation'
 
 interface CreateStrategyContentProps {
   user: User
@@ -36,13 +37,17 @@ export default function CreateStrategyContent({ user }: CreateStrategyContentPro
     setIsLoading(true)
 
     try {
+      const conversationPayload = buildConversationPayload(messages, {
+        includeMessage: userMessage,
+      })
+
       // Call conversational AI
       const chatResponse = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: messageContent,
-          context: messages,
+          context: conversationPayload,
         })
       })
 
@@ -58,7 +63,7 @@ export default function CreateStrategyContent({ user }: CreateStrategyContentPro
 
       // Handle different intents
       if (chatData.intent === 'create_portfolio' && chatData.needs_data) {
-        await handleCreatePortfolio(messageContent)
+        await handleCreatePortfolio(messageContent, [...messages, userMessage, aiMessage])
       } else if (chatData.intent === 'stock_info' && chatData.action?.details?.symbol) {
         await handleStockInfo(chatData.action.details.symbol)
       }
@@ -77,12 +82,18 @@ export default function CreateStrategyContent({ user }: CreateStrategyContentPro
     }
   }
 
-  const handleCreatePortfolio = async (prompt: string) => {
+  const handleCreatePortfolio = async (
+    prompt: string,
+    conversation: ChatMessage[] = messages
+  ) => {
     try {
       const response = await fetch('/api/ai/create-portfolio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({
+          prompt,
+          context: buildConversationPayload(conversation),
+        })
       })
 
       const data = await response.json()
