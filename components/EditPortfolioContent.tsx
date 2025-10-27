@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { ChatMessage } from '@/types/ai-investor'
 import { Bot, ChevronDown, MessageSquare } from 'lucide-react'
 import { PortfolioStock } from '@/types/stocks'
+import { buildConversationPayload } from '@/lib/ai/conversation'
 
 interface EditPortfolioContentProps {
   user: User
@@ -41,10 +42,14 @@ export default function EditPortfolioContent({ user, portfolio }: EditPortfolioC
     setIsLoading(true)
 
     try {
+      const conversationPayload = buildConversationPayload(messages, {
+        includeMessage: userMessage,
+      })
+
       const chatResponse = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: messageContent, context: messages })
+        body: JSON.stringify({ message: messageContent, context: conversationPayload })
       })
       const chatData = await chatResponse.json()
 

@@ -11,6 +11,7 @@ import BrokerOrdersMode from './BrokerOrdersMode'
 import { AIMode, ChatMessage, PortfolioSuggestion, PortfolioAnalysis } from '@/types/ai-investor'
 import { MultiPeriodBacktest } from '@/types/stocks'
 import { v4 as uuidv4 } from 'uuid'
+import { buildConversationPayload } from '@/lib/ai/conversation'
 
 interface AIInvestorLayoutProps {
   user: User
@@ -44,6 +45,9 @@ export default function AIInvestorLayout({ user }: AIInvestorLayoutProps) {
     setIsLoading(true)
 
     try {
+      const conversationWithUser = [...messages, userMessage]
+      const conversationPayload = buildConversationPayload(conversationWithUser)
+
       // For broker orders mode, use existing system
       if (activeMode === 'broker-orders') {
         const aiMessage: ChatMessage = {
@@ -63,7 +67,7 @@ export default function AIInvestorLayout({ user }: AIInvestorLayoutProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: messageContent,
-          context: messages,
+          context: conversationPayload,
           currentPortfolio: portfolioSuggestion
         })
       })
@@ -81,10 +85,12 @@ export default function AIInvestorLayout({ user }: AIInvestorLayoutProps) {
       }
       setMessages(prev => [...prev, aiMessage])
 
+      const conversationWithAI = [...conversationWithUser, aiMessage]
+
       // Handle different intents
       if (chatData.intent === 'create_portfolio' && chatData.needs_data) {
         // User wants to create a portfolio, call the create portfolio API
-        await handleCreatePortfolio(messageContent)
+        await handleCreatePortfolio(messageContent, conversationWithAI)
       } else if (chatData.intent === 'modify_portfolio' && chatData.action) {
         // User wants to modify the current portfolio
         await handleModifyPortfolio(chatData.action)
@@ -110,7 +116,10 @@ export default function AIInvestorLayout({ user }: AIInvestorLayoutProps) {
     }
   }
 
-  const handleCreatePortfolio = async (prompt: string) => {
+  const handleCreatePortfolio = async (
+    prompt: string,
+    conversation: ChatMessage[] = messages
+  ) => {
     try {
       const response = await fetch('/api/ai/create-portfolio', {
         method: 'POST',
@@ -118,7 +127,7 @@ export default function AIInvestorLayout({ user }: AIInvestorLayoutProps) {
         body: JSON.stringify({
           prompt,
           total_amount: 10000,
-          context: messages
+          context: buildConversationPayload(conversation)
         })
       })
 
