@@ -38,5 +38,37 @@
   .card {
     @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl;
   }
+
+  /* Brutalist styles - only for landing page */
+  .brutalist-grid {
+    background-image: 
+      linear-gradient(to right, black 1px, transparent 1px),
+      linear-gradient(to bottom, black 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  
+  .brutalist-border {
+    @apply border-4 border-black;
+  }
+  
+  .brutalist-button {
+    @apply bg-black text-white border-4 border-black px-8 py-4 uppercase tracking-tighter;
+    font-family: Impact, var(--font-anton), 'Arial Black', sans-serif;
+    transition: all 0.1s;
+  }
+  
+  .brutalist-button:hover {
+    @apply bg-white text-black;
+  }
+  
+  .brutalist-button-outline {
+    @apply bg-white text-black border-4 border-black px-8 py-4 uppercase tracking-tighter;
+    font-family: Impact, var(--font-anton), 'Arial Black', sans-serif;
+    transition: all 0.1s;
+  }
+  
+  .brutalist-button-outline:hover {
+    @apply bg-black text-white;
+  }
 }
 

@@ -1,113 +1,93 @@
-import { Brain, MessageSquare, TrendingUp, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Features() {
   const features = [
     {
       title: "AI ASSISTANT",
-      description: "Natural language is like a game changer. Improve your portfolios, maximize returns and know where you're investing with intelligent insights.",
-      icon: Brain,
-      image: "/features/ai-assistant.png"
+      description: "NATURAL LANGUAGE IS LIKE A GAME CHANGER. IMPROVE YOUR PORTFOLIOS, MAXIMIZE RETURNS AND KNOW WHERE YOU'RE INVESTING WITH INTELLIGENT INSIGHTS.",
+      number: "01"
     },
     {
       title: "CREATE STRATEGIES", 
-      description: "Create portfolios, simulate returns and track records. Run strategies fast with AI-powered optimization and backtesting.",
-      icon: TrendingUp,
-      image: "/features/create-strategies.png"
+      description: "CREATE PORTFOLIOS, SIMULATE RETURNS AND TRACK RECORDS. RUN STRATEGIES FAST WITH AI-POWERED OPTIMIZATION AND BACKTESTING.",
+      number: "02"
     },
     {
       title: "TALK WITH INVESTORS",
-      description: "Join ticker rooms to chat live about earnings, ask questions, and debate price action with the community.",
-      icon: Users,
-      image: "/features/community-chat.png"
+      description: "JOIN TICKER ROOMS TO CHAT LIVE ABOUT EARNINGS, ASK QUESTIONS, AND DEBATE PRICE ACTION WITH THE COMMUNITY.",
+      number: "03"
     }
   ]
 
   return (
-    <section id="features" className="py-24 px-4 bg-gray-900">
-      <div className="container mx-auto max-w-7xl">
+    <section id="features" className="relative py-16 md:py-24 px-4 bg-white border-b-4 border-black">
+      {/* Grid Background */}
+      <div 
+        className="absolute inset-0 opacity-5 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, black 2px, transparent 2px),
+            linear-gradient(to bottom, black 2px, transparent 2px)
+          `,
+          backgroundSize: '60px 60px'
+        }}
+      />
+      
+      <div className="container mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-20">
-          <h2 className="text-5xl md:text-6xl font-bold mb-6">
-            Powerful
-            <br />
-            <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Features
-            </span>
+        <div className="mb-16 border-b-4 border-black pb-8">
+          <h2 className="font-impact text-6xl md:text-8xl uppercase tracking-tighter text-black mb-4">
+            FEATURES
           </h2>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Everything you need to build winning investment strategies with AI and community intelligence.
+          <p className="font-anton text-xl md:text-2xl text-black uppercase">
+            EVERYTHING YOU NEED TO BUILD WINNING INVESTMENT STRATEGIES
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="space-y-32">
-          {features.map((feature, index) => {
-            const Icon = feature.icon
-            const isEven = index % 2 === 0
-            
-            return (
-              <div key={index} className={`grid md:grid-cols-2 gap-12 items-center ${!isEven ? 'md:grid-flow-col-dense' : ''}`}>
-                {/* Text Content */}
-                <div className={`space-y-6 ${!isEven ? 'md:col-start-2' : ''}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl">
-                      <Icon className="text-white" size={32} />
-                    </div>
-                    <h3 className="text-3xl md:text-4xl font-bold">{feature.title}</h3>
-                  </div>
-                  <p className="text-lg text-gray-400 leading-relaxed">
-                    {feature.description}
-                  </p>
-                  <Link 
-                    href="/signup" 
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
-                  >
-                    Try Now
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-
-                {/* Image/Visual */}
-                <div className={`${!isEven ? 'md:col-start-1 md:row-start-1' : ''}`}>
-                  <div className="relative">
-                    <div className="bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-2xl p-8 border border-gray-700">
-                      <div className="bg-gray-800 rounded-xl p-6 border border-gray-600">
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          </div>
-                          <div className="h-32 bg-gray-700 rounded-lg flex items-center justify-center">
-                            <Icon className="text-purple-400" size={48} />
-                          </div>
-                          <div className="space-y-2">
-                            <div className="h-2 bg-gray-600 rounded w-3/4"></div>
-                            <div className="h-2 bg-gray-600 rounded w-1/2"></div>
-                            <div className="h-2 bg-gray-600 rounded w-2/3"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        <div className="space-y-0">
+          {features.map((feature, index) => (
+            <div 
+              key={index} 
+              className={`grid md:grid-cols-3 gap-0 border-b-4 border-black last:border-b-0 ${
+                index % 2 === 0 ? 'bg-white' : 'bg-gray-100'
+              }`}
+            >
+              {/* Number */}
+              <div className="border-r-4 border-black p-8 flex items-center justify-center">
+                <div className="font-impact text-8xl md:text-9xl text-black opacity-20">
+                  {feature.number}
                 </div>
               </div>
-            )
-          })}
+              
+              {/* Content */}
+              <div className="md:col-span-2 p-8 space-y-6">
+                <h3 className="font-impact text-4xl md:text-5xl uppercase tracking-tighter text-black">
+                  {feature.title}
+                </h3>
+                <p className="font-anton text-lg md:text-xl text-black leading-relaxed">
+                  {feature.description}
+                </p>
+                <Link 
+                  href="/signup" 
+                  className="inline-block brutalist-button text-lg"
+                >
+                  TRY NOW
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* CTA Section */}
-        <div className="text-center mt-20">
-          <div className="p-12 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-emerald-600/10 rounded-3xl border border-purple-500/20 backdrop-blur-sm">
-            <h3 className="text-3xl font-bold mb-4">Ready to Get Started?</h3>
-            <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">
-              Join thousands of investors building winning strategies with AI and community intelligence.
+        <div className="mt-16 border-4 border-black bg-black text-white p-12">
+          <div className="text-center space-y-6">
+            <h3 className="font-impact text-4xl md:text-5xl uppercase tracking-tighter">READY TO GET STARTED?</h3>
+            <p className="font-anton text-xl uppercase max-w-2xl mx-auto">
+              JOIN THOUSANDS OF INVESTORS BUILDING WINNING STRATEGIES WITH AI AND COMMUNITY INTELLIGENCE.
             </p>
-            <Link href="/signup" className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-purple-500/25">
-              Start Free Trial
+            <Link href="/signup" className="inline-block brutalist-button-outline text-xl bg-white text-black hover:bg-gray-200">
+              START FREE TRIAL
             </Link>
           </div>
         </div>

@@ -1,9 +1,9 @@
-import Header from '@/components/Header'
+import HeaderLanding from '@/components/HeaderLanding'
 import Hero from '@/components/Hero'
 import Features from '@/components/Features'
 import Pricing from '@/components/Pricing'
 import Testimonials from '@/components/Testimonials'
-import Footer from '@/components/Footer'
+import FooterLanding from '@/components/FooterLanding'
 
 export const metadata = {
   title: 'Mercurium Investments - AI-Powered Investment Strategies & Social Trading',
@@ -13,13 +13,13 @@ export const metadata = {
 
 export default function Home() {
   return (
-    <div className="dark">
-      <Header />
+    <div className="brutalist-landing bg-white">
+      <HeaderLanding />
       <Hero />
       <Features />
       <Pricing />
       <Testimonials />
-      <Footer />
+      <FooterLanding />
     </div>
   )
 }

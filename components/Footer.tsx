@@ -10,10 +10,10 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg"></div>
-              <span className="text-xl font-bold">WhiteApp</span>
+              <span className="text-xl font-bold">Mercurium</span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Modern web application skeleton for rapid development
+              AI-powered investment platform for modern traders
             </p>
           </div>
 
@@ -88,7 +88,7 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              © {new Date().getFullYear()} WhiteApp. All rights reserved.
+              © {new Date().getFullYear()} Mercurium. All rights reserved.
             </p>
             <div className="flex space-x-4">
               <a
@@ -116,7 +116,7 @@ export default function Footer() {
                 <Linkedin size={20} />
               </a>
               <a
-                href="mailto:contact@whiteapp.com"
+                href="mailto:contact@mercurium.com"
                 className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
               >
                 <Mail size={20} />

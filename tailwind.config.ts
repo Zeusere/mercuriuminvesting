@@ -9,6 +9,10 @@ const config: Config = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        anton: ['var(--font-anton)', 'Impact', 'Arial Black', 'sans-serif'],
+        impact: ['Impact', 'var(--font-anton)', 'Arial Black', 'sans-serif'],
+      },
       colors: {
         primary: {
           50: '#f0f9ff',

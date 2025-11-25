@@ -1,114 +1,110 @@
-import { Check } from 'lucide-react'
 import Link from 'next/link'
 
 const plans = [
   {
-    name: 'Starter',
+    name: 'STARTER',
     price: '0',
-    description: 'Perfect for trying out the platform',
+    description: 'PERFECT FOR TRYING OUT THE PLATFORM',
     features: [
-      'Full authentication system',
-      'Basic dashboard',
-      'Community support',
-      'Light & dark mode',
-      '1 AI integration',
+      'FULL AUTHENTICATION SYSTEM',
+      'BASIC DASHBOARD',
+      'COMMUNITY SUPPORT',
+      '1 AI INTEGRATION',
     ],
-    cta: 'Start Free',
+    cta: 'START FREE',
     popular: false,
   },
   {
-    name: 'Pro',
+    name: 'PRO',
     price: '29',
-    description: 'Best for professional developers',
+    description: 'BEST FOR PROFESSIONAL DEVELOPERS',
     features: [
-      'Everything in Starter',
-      'Advanced dashboard',
-      'Priority support',
-      'Custom branding',
-      'Unlimited AI integrations',
-      'Analytics dashboard',
-      'API access',
+      'EVERYTHING IN STARTER',
+      'ADVANCED DASHBOARD',
+      'PRIORITY SUPPORT',
+      'UNLIMITED AI INTEGRATIONS',
+      'ANALYTICS DASHBOARD',
+      'API ACCESS',
     ],
-    cta: 'Get Started',
+    cta: 'GET STARTED',
     popular: true,
   },
   {
-    name: 'Enterprise',
+    name: 'ENTERPRISE',
     price: '99',
-    description: 'For teams and organizations',
+    description: 'FOR TEAMS AND ORGANIZATIONS',
     features: [
-      'Everything in Pro',
-      'Dedicated support',
-      'Custom development',
-      'SLA guarantee',
-      'Advanced security',
-      'Team management',
-      'White-label option',
+      'EVERYTHING IN PRO',
+      'DEDICATED SUPPORT',
+      'CUSTOM DEVELOPMENT',
+      'SLA GUARANTEE',
+      'ADVANCED SECURITY',
+      'TEAM MANAGEMENT',
     ],
-    cta: 'Contact Sales',
+    cta: 'CONTACT SALES',
     popular: false,
   },
 ]
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="py-20 px-4">
+    <section id="pricing" className="py-16 md:py-24 px-4 bg-white border-b-4 border-black">
       <div className="container mx-auto max-w-6xl">
-        <div className="text-center space-y-4 mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold">
-            Simple, Transparent Pricing
+        <div className="mb-16 border-b-4 border-black pb-8">
+          <h2 className="font-impact text-6xl md:text-8xl uppercase tracking-tighter text-black mb-4">
+            PRICING
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Choose the plan that fits your needs
+          <p className="font-anton text-xl md:text-2xl text-black uppercase">
+            CHOOSE THE PLAN THAT FITS YOUR NEEDS
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-4 border-black">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`card relative ${
-                plan.popular
-                  ? 'ring-2 ring-primary-600 scale-105'
-                  : ''
+              className={`border-r-4 border-black last:border-r-0 ${
+                plan.popular ? 'bg-black text-white' : 'bg-white text-black'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Most Popular
+                <div className="bg-white text-black border-b-4 border-black p-2 text-center">
+                  <span className="font-impact text-sm uppercase tracking-tighter">MOST POPULAR</span>
                 </div>
               )}
 
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                  {plan.description}
-                </p>
-                <div className="flex items-baseline justify-center">
-                  <span className="text-5xl font-bold">${plan.price}</span>
-                  <span className="text-gray-600 dark:text-gray-400 ml-2">/month</span>
+              <div className="p-8 space-y-6">
+                <div>
+                  <h3 className="font-impact text-3xl uppercase tracking-tighter mb-2">{plan.name}</h3>
+                  <p className="font-anton text-sm uppercase mb-6 opacity-80">
+                    {plan.description}
+                  </p>
+                  <div className="flex items-baseline">
+                    <span className="font-impact text-6xl">${plan.price}</span>
+                    <span className="font-anton text-lg ml-2 opacity-80">/MONTH</span>
+                  </div>
                 </div>
+
+                <ul className="space-y-3 border-t-4 border-black pt-6">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start">
+                      <span className="font-impact text-xl mr-2">+</span>
+                      <span className="font-anton text-sm uppercase">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/signup"
+                  className={`block text-center w-full py-4 border-4 border-black font-impact text-lg uppercase tracking-tighter transition-all ${
+                    plan.popular
+                      ? 'bg-white text-black hover:bg-gray-200'
+                      : 'bg-black text-white hover:bg-gray-800'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
               </div>
-
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start">
-                    <Check className="text-primary-600 flex-shrink-0 mr-2 mt-1" size={20} />
-                    <span className="text-gray-600 dark:text-gray-400">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/signup"
-                className={`block text-center w-full py-3 rounded-lg font-semibold transition-all duration-200 ${
-                  plan.popular
-                    ? 'btn-primary'
-                    : 'btn-outline'
-                }`}
-              >
-                {plan.cta}
-              </Link>
             </div>
           ))}
         </div>
