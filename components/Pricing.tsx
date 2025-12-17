@@ -1,105 +1,111 @@
 import Link from 'next/link'
+import { Check } from 'lucide-react'
 
 const plans = [
   {
-    name: 'STARTER',
+    name: 'Free',
     price: '0',
-    description: 'PERFECT FOR TRYING OUT THE PLATFORM',
+    description: 'Perfect for trying out the platform',
     features: [
-      'FULL AUTHENTICATION SYSTEM',
-      'BASIC DASHBOARD',
-      'COMMUNITY SUPPORT',
-      '1 AI INTEGRATION',
+      'Basic portfolio creation',
+      'Community access',
+      'Limited AI suggestions',
+      'Paper trading',
     ],
-    cta: 'START FREE',
+    cta: 'Start free',
     popular: false,
   },
   {
-    name: 'PRO',
+    name: 'Pro',
     price: '29',
-    description: 'BEST FOR PROFESSIONAL DEVELOPERS',
+    description: 'Best for active traders',
     features: [
-      'EVERYTHING IN STARTER',
-      'ADVANCED DASHBOARD',
-      'PRIORITY SUPPORT',
-      'UNLIMITED AI INTEGRATIONS',
-      'ANALYTICS DASHBOARD',
-      'API ACCESS',
+      'Everything in Free',
+      'Unlimited AI strategies',
+      'Advanced backtesting',
+      'Real-time execution',
+      'Priority support',
+      'API access',
     ],
-    cta: 'GET STARTED',
+    cta: 'Get started',
     popular: true,
   },
   {
-    name: 'ENTERPRISE',
+    name: 'Enterprise',
     price: '99',
-    description: 'FOR TEAMS AND ORGANIZATIONS',
+    description: 'For teams and organizations',
     features: [
-      'EVERYTHING IN PRO',
-      'DEDICATED SUPPORT',
-      'CUSTOM DEVELOPMENT',
-      'SLA GUARANTEE',
-      'ADVANCED SECURITY',
-      'TEAM MANAGEMENT',
+      'Everything in Pro',
+      'Dedicated support',
+      'Custom integrations',
+      'SLA guarantee',
+      'Advanced security',
+      'Team management',
     ],
-    cta: 'CONTACT SALES',
+    cta: 'Contact sales',
     popular: false,
   },
 ]
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="py-16 md:py-24 px-4 bg-white border-b-4 border-black">
+    <section id="pricing" className="py-20 md:py-32 px-4 bg-gray-50">
       <div className="container mx-auto max-w-6xl">
-        <div className="mb-16 border-b-4 border-black pb-8">
-          <h2 className="font-impact text-6xl md:text-8xl uppercase tracking-tighter text-black mb-4">
-            PRICING
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
+            Transparent pricing
           </h2>
-          <p className="font-anton text-xl md:text-2xl text-black uppercase">
-            CHOOSE THE PLAN THAT FITS YOUR NEEDS
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Simple fixed monthly subscription. Test for free.
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            * No commissions on trades. Zero management fees.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-4 border-black">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`border-r-4 border-black last:border-r-0 ${
-                plan.popular ? 'bg-black text-white' : 'bg-white text-black'
+              className={`bg-white rounded-2xl p-8 border-2 transition-all ${
+                plan.popular
+                  ? 'border-blue-500 shadow-xl scale-105'
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               {plan.popular && (
-                <div className="bg-white text-black border-b-4 border-black p-2 text-center">
-                  <span className="font-impact text-sm uppercase tracking-tighter">MOST POPULAR</span>
+                <div className="bg-blue-500 text-white text-center py-2 px-4 rounded-lg mb-6 text-sm font-semibold">
+                  Most Popular
                 </div>
               )}
 
-              <div className="p-8 space-y-6">
+              <div className="space-y-6">
                 <div>
-                  <h3 className="font-impact text-3xl uppercase tracking-tighter mb-2">{plan.name}</h3>
-                  <p className="font-anton text-sm uppercase mb-6 opacity-80">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                  <p className="text-gray-600 text-sm mb-6">
                     {plan.description}
                   </p>
                   <div className="flex items-baseline">
-                    <span className="font-impact text-6xl">${plan.price}</span>
-                    <span className="font-anton text-lg ml-2 opacity-80">/MONTH</span>
+                    <span className="text-5xl font-bold text-gray-900">${plan.price}</span>
+                    <span className="text-gray-600 ml-2">/month</span>
                   </div>
                 </div>
 
-                <ul className="space-y-3 border-t-4 border-black pt-6">
+                <ul className="space-y-4 border-t border-gray-200 pt-6">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start">
-                      <span className="font-impact text-xl mr-2">+</span>
-                      <span className="font-anton text-sm uppercase">{feature}</span>
+                      <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{feature}</span>
                     </li>
                   ))}
                 </ul>
 
                 <Link
                   href="/signup"
-                  className={`block text-center w-full py-4 border-4 border-black font-impact text-lg uppercase tracking-tighter transition-all ${
+                  className={`block text-center w-full py-3 rounded-lg font-semibold transition-all ${
                     plan.popular
-                      ? 'bg-white text-black hover:bg-gray-200'
-                      : 'bg-black text-white hover:bg-gray-800'
+                      ? 'bg-gray-900 text-white hover:bg-gray-800'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                   }`}
                 >
                   {plan.cta}
@@ -107,6 +113,12 @@ export default function Pricing() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-16 text-center">
+          <p className="text-gray-600 mb-4">
+            Need help choosing? <Link href="#" className="text-blue-600 hover:underline font-semibold">Contact us</Link>
+          </p>
         </div>
       </div>
     </section>

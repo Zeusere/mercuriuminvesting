@@ -7,13 +7,13 @@ import FooterLanding from '@/components/FooterLanding'
 
 export const metadata = {
   title: 'Mercurium Investments - AI-Powered Investment Strategies & Social Trading',
-  description: 'Build winning investment strategies with artificial intelligence and copy top-performing traders. Join the most advanced social trading platform with AI assistance, real-time analysis, and automated portfolio management.',
+  description: 'Build trading algorithms with AI, backtest them, then execute—all in one platform. No coding skills required. Trading. Built better.',
   keywords: 'investment strategies, AI trading, social trading, portfolio management, copy trading, artificial intelligence, financial technology, investment platform, trading community, automated investing',
 }
 
 export default function Home() {
   return (
-    <div className="brutalist-landing bg-white">
+    <div className="bg-white">
       <HeaderLanding />
       <Hero />
       <Features />

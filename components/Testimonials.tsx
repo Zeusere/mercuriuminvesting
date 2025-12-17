@@ -1,145 +1,94 @@
 export default function Testimonials() {
   const testimonials = [
     {
-      name: "SARAH CHEN",
-      role: "PORTFOLIO MANAGER",
-      company: "TECHVENTURES CAPITAL",
-      content: "MERCURIUM'S AI HAS REVOLUTIONIZED HOW WE APPROACH PORTFOLIO CONSTRUCTION. THE STRATEGY SUGGESTIONS ARE INCREDIBLY SOPHISTICATED AND THE SOCIAL FEATURES HELP US STAY AHEAD OF MARKET TRENDS.",
+      name: "Sarah Chen",
+      role: "Portfolio Manager",
+      company: "TechVentures Capital",
+      content: "Mercurium's AI has revolutionized how we approach portfolio construction. The strategy suggestions are incredibly sophisticated and the social features help us stay ahead of market trends.",
       performance: "+47.3%",
-      period: "6 MONTHS"
+      period: "6 months"
     },
     {
-      name: "MARCUS RODRIGUEZ",
-      role: "INDIVIDUAL INVESTOR",
-      company: "INDEPENDENT TRADER",
-      content: "I WENT FROM LOSING MONEY TO CONSISTENT PROFITS IN JUST 3 MONTHS. THE COPY TRADING FEATURE LET ME LEARN FROM THE BEST, AND NOW I'M BUILDING MY OWN SUCCESSFUL STRATEGIES.",
+      name: "Marcus Rodriguez",
+      role: "Individual Investor",
+      company: "Independent Trader",
+      content: "I went from losing money to consistent profits in just 3 months. The copy trading feature let me learn from the best, and now I'm building my own successful strategies.",
       performance: "+89.2%",
-      period: "1 YEAR"
+      period: "1 year"
     },
     {
-      name: "EMILY WATSON",
-      role: "FINANCIAL ADVISOR",
-      company: "WEALTHBUILD PARTNERS",
-      content: "THE NATURAL LANGUAGE TRADING IS A GAME-CHANGER. I CAN ADJUST CLIENT PORTFOLIOS INSTANTLY WITH SIMPLE COMMANDS. MY CLIENTS LOVE THE TRANSPARENCY AND PERFORMANCE.",
+      name: "Emily Watson",
+      role: "Financial Advisor",
+      company: "WealthBuild Partners",
+      content: "The natural language trading is a game-changer. I can adjust client portfolios instantly with simple commands. My clients love the transparency and performance.",
       performance: "+34.7%",
-      period: "8 MONTHS"
+      period: "8 months"
     },
     {
-      name: "DAVID KIM",
-      role: "DAY TRADER",
-      company: "QUANTUM TRADING",
-      content: "THE AI'S REAL-TIME ANALYSIS GIVES ME AN EDGE I NEVER HAD BEFORE. COMBINED WITH THE SOCIAL INSIGHTS, I'M MAKING BETTER DECISIONS FASTER THAN EVER.",
+      name: "David Kim",
+      role: "Day Trader",
+      company: "Quantum Trading",
+      content: "The AI's real-time analysis gives me an edge I never had before. Combined with the social insights, I'm making better decisions faster than ever.",
       performance: "+156.8%",
-      period: "1 YEAR"
-    },
-    {
-      name: "LISA THOMPSON",
-      role: "RETIREMENT PLANNER",
-      company: "SECURE FUTURE ADVISORS",
-      content: "MERCURIUM HELPS ME CREATE DIVERSIFIED, RISK-MANAGED PORTFOLIOS FOR MY CLIENTS. THE AI HANDLES THE COMPLEXITY WHILE I FOCUS ON RELATIONSHIP BUILDING.",
-      performance: "+28.4%",
-      period: "10 MONTHS"
-    },
-    {
-      name: "ALEX JOHNSON",
-      role: "HEDGE FUND MANAGER",
-      company: "ALPHA CAPITAL",
-      content: "THE PLATFORM'S SOPHISTICATION RIVALS OUR PROPRIETARY SYSTEMS. THE SOCIAL COMPONENT PROVIDES UNIQUE MARKET INTELLIGENCE THAT'S IMPOSSIBLE TO FIND ELSEWHERE.",
-      performance: "+72.1%",
-      period: "1 YEAR"
+      period: "1 year"
     }
   ]
 
-  const stats = [
-    { label: "AVERAGE RETURN", value: "+54.2%" },
-    { label: "ACTIVE USERS", value: "50,000+" },
-    { label: "ASSETS UNDER MANAGEMENT", value: "$2.3B" },
-    { label: "SUCCESS RATE", value: "98.4%" }
-  ]
-
   return (
-    <section id="testimonials" className="py-16 md:py-24 px-4 bg-white border-b-4 border-black">
+    <section id="testimonials" className="py-20 md:py-32 px-4 bg-white">
       <div className="container mx-auto max-w-7xl">
-        {/* Section Header */}
-        <div className="mb-16 border-b-4 border-black pb-8">
-          <h2 className="font-impact text-6xl md:text-8xl uppercase tracking-tighter text-black mb-4">
-            SUCCESS STORIES
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
+            What people are saying
           </h2>
-          <p className="font-anton text-xl md:text-2xl text-black uppercase">
-            SEE HOW INVESTORS ARE ACHIEVING REMARKABLE RESULTS
-          </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border-4 border-black mb-16">
-          {stats.map((stat, index) => (
-            <div 
-              key={index} 
-              className={`p-8 border-r-4 border-black last:border-r-0 ${
-                index % 2 === 0 ? 'bg-white' : 'bg-gray-100'
-              }`}
-            >
-              <p className="font-impact text-4xl md:text-5xl text-black mb-2">{stat.value}</p>
-              <p className="font-anton text-xs uppercase text-gray-600">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Testimonials Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border-4 border-black">
+        <div className="grid md:grid-cols-2 gap-8 mb-16">
           {testimonials.map((testimonial, index) => {
             const isPositive = parseFloat(testimonial.performance) >= 0
-            const colorClass = isPositive ? 'text-green-600' : 'text-red-600'
             
             return (
               <div 
                 key={index} 
-                className={`p-8 border-r-4 border-b-4 border-black last:border-r-0 ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-gray-100'
-                }`}
+                className="bg-gray-50 rounded-2xl p-8 border border-gray-200 hover:shadow-lg transition-all"
               >
-                {/* Quote */}
                 <div className="mb-6">
-                  <p className="font-anton text-sm uppercase text-black leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed text-lg">
                     "{testimonial.content}"
                   </p>
                 </div>
 
-                {/* Performance */}
-                <div className="mb-6 border-t-4 border-black pt-4">
-                  <div className="flex items-baseline gap-2">
-                    <p className={`font-impact text-4xl ${colorClass}`}>{testimonial.performance}</p>
-                    <p className="font-anton text-xs uppercase text-gray-600">OVER {testimonial.period}</p>
+                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                  <div>
+                    <p className="font-bold text-gray-900 text-lg">{testimonial.name}</p>
+                    <p className="text-gray-600 text-sm">{testimonial.role}</p>
+                    <p className="text-gray-500 text-xs">{testimonial.company}</p>
                   </div>
-                </div>
-
-                {/* User Info */}
-                <div className="border-t-4 border-black pt-4">
-                  <p className="font-impact text-lg uppercase text-black mb-1">{testimonial.name}</p>
-                  <p className="font-anton text-xs uppercase text-gray-600">{testimonial.role}</p>
-                  <p className="font-anton text-xs uppercase text-gray-500">{testimonial.company}</p>
+                  <div className="text-right">
+                    <p className={`text-3xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                      {testimonial.performance}
+                    </p>
+                    <p className="text-gray-600 text-xs">over {testimonial.period}</p>
+                  </div>
                 </div>
               </div>
             )
           })}
         </div>
 
-        {/* Bottom CTA */}
-        <div className="mt-16 border-4 border-black bg-black text-white p-12">
-          <div className="text-center space-y-6">
-            <h3 className="font-impact text-4xl md:text-5xl uppercase tracking-tighter">JOIN THESE SUCCESSFUL INVESTORS</h3>
-            <p className="font-anton text-xl uppercase max-w-2xl mx-auto">
-              START YOUR JOURNEY TO BETTER INVESTMENT RETURNS WITH AI-POWERED STRATEGIES AND COMMUNITY INSIGHTS.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="/signup" className="brutalist-button-outline text-xl bg-white text-black hover:bg-gray-200">
-                START YOUR SUCCESS STORY
-              </a>
-              <a href="#pricing" className="brutalist-button text-xl">
-                VIEW PRICING
-              </a>
-            </div>
-          </div>
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-12 text-center border border-gray-200">
+          <h3 className="text-3xl font-bold text-gray-900 mb-4">
+            Join these successful investors
+          </h3>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Start your journey to better investment returns with AI-powered strategies and community insights.
+          </p>
+          <a 
+            href="/signup" 
+            className="inline-block bg-gray-900 text-white px-8 py-4 rounded-lg font-semibold hover:bg-gray-800 transition-all"
+          >
+            Get started
+          </a>
         </div>
       </div>
     </section>
